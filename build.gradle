@@ -1,0 +1,18 @@
+ext {
+    /**
+     * 하나의 예시로, extension-android 에서 extension-standard 를 임포트하고 싶으면
+     * kal 프로젝트 단독으로 열어 빌드할 경우에는 implementation(project(':extension-standard')) 와 같이 작성하면 빌드가 되나
+     * 서브모듈로 사용하여 빌드할 경우에는 implementation(project(':kal:extension-standard')) 과 같이 모듈명을 앞에 prefix 로 넣어줘야 빌드가 된다.
+     *
+     * 즉, kal Project 가 어딘가에 서브 모듈로 임포트돼 사용되는게 아니라 단독으로 열어서 빌드를 할 경우는
+     * kal 프로젝트 내 모듈에서 다른 모듈을 implementation 할 때 프로젝트 명을 implementation 명세에 prefix 로 넣을 필요가 없으나,
+     * 모듈로써 사용될 경우에는 모듈 명을 implementation 명세 앞에 prefix 로 넣어줘야 빌드가 된다.
+     */
+    getImplementationPrefix = { parentProjectName ->
+        if (parentProjectName == rootProject.name) {
+            return ""
+        } else {
+            return ":${parentProjectName}"
+        }
+    }
+}

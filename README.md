@@ -13,6 +13,19 @@
 
 # Usage
 
+- 서브 모듈이 포함된 레포지토리를 클론하는 경우
+  - 아래 명령어로 슈퍼 레포지토리를 clone
+  ```
+  android_project> git clone [SUPER_REPOSITRY]
+  android_project> cd [PROJECT_NAME]
+  ```
+  - 위처럼 땡겨왔을 경우 서브모듈 폴더 kal 안에는 아무 내용이 없음
+  - 아래 명령어로 서브모듈에 대한 설정파일 생성(init) 및 서브 모듈안의 코드들 fetch 해옴(update)
+  ```
+  super> git submodule init
+  super> git submodule update --remote
+  ```
+
 - 해당 레파지토리가 서브모듈로 설정되어 있지 않은 레파지토리에서 임포트할 경우
   - 아래 명령어로 서브모듈을 super 레파지토리에 추가 (폴더명은 kal 로 설정)
   ```
@@ -47,17 +60,4 @@
   ``` gradle 
   implementation(project(':kal:extension-android'))
   implementation(project(':kal:extension-standard'))
-  ```
-
-- 서브 모듈이 포함된 레포지토리를 클론하는 경우
-  - 아래 명령어로 슈퍼 레포지토리를 clone
-  ```
-  android_project> git clone [URL_FOR_SOME_THING_SUPER_REPOSITRY_THAT_HAS_THIS_SUB_MODULE]
-  android_project> cd [PROJECT_NAME]
-  ```
-  - 위처럼 땡겨왔을 경우 서브모듈 폴더 kal 안에는 아무 내용이 없음
-  - 아래 명령어로 서브모듈에 대한 설정파일 생성(init) 및 서브 모듈안의 코드들 fetch 해옴(update)
-  ```
-  super> git submodule init
-  super> git submodule update --remote
   ```

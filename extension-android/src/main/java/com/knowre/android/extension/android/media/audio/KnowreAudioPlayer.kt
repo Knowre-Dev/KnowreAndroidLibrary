@@ -167,4 +167,5 @@ class KnowreAudioPlayer {
              */
             state = KnowreAudioPlayerState.Idle(shouldReset = false)
         }
+
 }

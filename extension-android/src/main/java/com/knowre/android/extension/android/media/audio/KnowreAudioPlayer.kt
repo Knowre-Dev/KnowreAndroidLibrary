@@ -55,13 +55,19 @@ class KnowreAudioPlayer {
     private var mediaPlayer: MediaPlayer = createMediaPlayer()
 
     /**
-     * 이 함수는 단순히 media 를 play 만 하는 것이 아니라 플레이어를 초기화([KnowreAudioPlayerState.Idle]) 및 준비([KnowreAudioPlayerState.Preparing])를 거쳐 최종적으로 play 하게한다.
-     * 만약 플레이어가 error, release 상태이거나 url 이 달라졌을 경우 자동적으로 새로 초기화 및 준비한 후 play 한다.
-     * 다만, [playWhenPrepared] 가 false 인 값을 가진 상태로 start 함수를 호출하게되면 media 가 준비된 이후([KnowreAudioPlayerState.Prepared]) media 가 자동으로 재생되지 않는다.
-     * (이 상태는 [KnowreAudioPlayerState.Prepared] 상태로 [KnowreAudioPlayerState.Paused] 상태와는 다른 상태이다.)
-     * 주의할 점은 [playWhenPrepared] 가 false 면 현재 player 는 media 를 async 하게 준비하게 되는데,
-     * 이 [KnowreAudioPlayerState.Preparing] 상태 중에는 start 함수를 여러번 더 부른다고 하더라도 미디어가 준비된 이후에 자동 재생되지 않는다.
-     * 참고 : play 중에는 start 를 계속해서 호출하더라도 아무일도 일어나지 않는다.(처음부터 재생되는 것 아님) 만약 재생 중에 다시 처음 부터 재생하길 원할 경우 [seekTo] 를 사용하면 된다.
+     * 이 함수는 단순히 media 를 재생만 하는 것이 아니라 플레이어를 초기화([Idle][KnowreAudioPlayerState.Idle]) 및 media 준비([Preparing][KnowreAudioPlayerState.Preparing])를 거쳐 최종적으로 재생하는 것까지 포함한다.
+     *
+     * 만약 플레이어가 [Error][KnowreAudioPlayerState.Error], [Release(End)][KnowreAudioPlayerState.End] 상태이거나 url 이 달라졌을 경우에는 자동적으로 새로 초기화 및 media 준비를 한 후 재생한다.
+     * 다만, [playWhenPrepared] 가 false 인 값을 가진 상태로 start 함수를 호출하게되면 media 가 준비되더라도 media 가 자동으로 재생되지 않고 [Prepared][KnowreAudioPlayerState.Prepared] 상태로 남게된다.
+     * ([KnowreAudioPlayerState.Paused] 와는 다른 상태이다.)
+     *
+     * [KnowreAudioPlayer] 는 media 를 async 하게 준비하고, media 준비 중에는 상태가 [Preparing][KnowreAudioPlayerState.Preparing] 이 된다.
+     * 이 상태일 때 만약 [playWhenPrepared] 가 false 라면 외부에서 start 함수를 여러번 더 부른다고 하더라도 미디어가 준비된 이후에 자동재생된다고 생각하면 안된다.
+     * 즉, [playWhenPrepared] 가 false 일 때, start 를 호출해 media 준비가 완료된 이후라면([Prepared][KnowreAudioPlayerState.Prepared]상태) 다시 start 를 호출하면 media 가 재생되지만,
+     * start 를 호출한 후 아직 media 가 준비가 안됐을 경우엔([Preparing][KnowreAudioPlayerState.Preparing]상태) 다시 start 를 호출해도 media 준비 완료 후 자동재생되지 않는다.
+     * ([Preparing][KnowreAudioPlayerState.Preparing] 중일 때는 [playWhenPrepared] 의 상태를 true 로 바꿔줘야 준비가 완료된 이후 media 가 재생되게 된다.)
+     *
+     * 참고 : media 재생 중에는 start 를 계속해서 호출하더라도 아무일도 일어나지 않는다.(처음부터 재생되는 것 아님) 만약 재생 중에 다시 처음 부터 재생하길 원할 경우 [seekTo] 를 사용하면 된다.
      */
     fun start(url: String) {
         when (state) {

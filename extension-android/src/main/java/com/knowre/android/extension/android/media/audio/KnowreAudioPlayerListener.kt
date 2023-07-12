@@ -1,6 +1,7 @@
 package com.knowre.android.extension.android.media.audio
 
 import android.media.MediaPlayer
+import com.knowre.android.extension.android.media.audio.dto.KnowreAudioPlayerState
 
 
 fun interface KnowreAudioPlayerListener {

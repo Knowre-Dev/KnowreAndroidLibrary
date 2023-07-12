@@ -1,4 +1,4 @@
-package com.knowre.android.extension.android.media.audio
+package com.knowre.android.extension.android.media.audio.dto
 
 import android.media.MediaPlayer
 

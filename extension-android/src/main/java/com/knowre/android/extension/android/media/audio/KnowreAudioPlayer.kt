@@ -2,6 +2,8 @@ package com.knowre.android.extension.android.media.audio
 
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import com.knowre.android.extension.android.media.audio.dto.KnowreAudioPlayerState
+import com.knowre.android.extension.android.media.audio.dto.isPlayable
 import com.knowre.android.extension.standard.delegate.ObservableProperty
 
 

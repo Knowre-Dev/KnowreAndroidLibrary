@@ -46,11 +46,11 @@ class KnowreAudioPlayer {
     var url: String? = null
         private set
 
+    var listener: KnowreAudioPlayerListener? = null
+
     val currentPosition: Int get() = mediaPlayer.currentPosition
 
     val duration: Int get() = mediaPlayer.duration
-
-    var listener: KnowreAudioPlayerListener? = null
 
     private var mediaPlayer: MediaPlayer = createMediaPlayer()
 

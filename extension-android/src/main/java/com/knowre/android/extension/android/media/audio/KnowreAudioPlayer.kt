@@ -126,7 +126,7 @@ class KnowreAudioPlayer {
     private fun KnowreAudioPlayerState.applyState() {
         when (this) {
             is KnowreAudioPlayerState.Idle -> if (shouldReset) mediaPlayer.reset()
-            is KnowreAudioPlayerState.Preparing -> mediaPlayer.run { setDataSource(url).also { prepareAsync() } }
+            is KnowreAudioPlayerState.Preparing -> with(mediaPlayer) { setDataSource(url); prepareAsync() }
             is KnowreAudioPlayerState.Prepared -> Unit
             is KnowreAudioPlayerState.Started -> mediaPlayer.start()
             is KnowreAudioPlayerState.Paused -> mediaPlayer.pause()

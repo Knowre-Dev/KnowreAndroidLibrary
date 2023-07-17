@@ -146,7 +146,14 @@ class KnowreAudioPlayer {
                 }
             }
 
-            setOnCompletionListener { state = KnowreAudioPlayerState.PlaybackCompleted() }
+            setOnCompletionListener {
+                /**
+                 * 재생이 거의 끝나갈 무렵에 pause 를 하면 playback complete 가 되지 않고 pause 상태로 남아 이 코드라인으로 들어오면 안되는데,
+                 * 특정 기기 혹은 특정 API 에서 pause 를 했음에도 이 코드라인으로 들어오는 경우가 있다.
+                 * 이는 외부에서 [KnowreAudioPlayerState.PlaybackCompleted] 를 사용할 때 주의해야한다.
+                 */
+                state = KnowreAudioPlayerState.PlaybackCompleted()
+            }
 
             setOnErrorListener { _, what, extra ->
                 /**

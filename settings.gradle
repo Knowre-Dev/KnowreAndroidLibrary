@@ -1,3 +1,5 @@
 include ':app'
 include ':extension-standard'
 include ':extension-android'
+include ':myscript-iink'
+include ':myscript-iink:UIReferenceImplementation'

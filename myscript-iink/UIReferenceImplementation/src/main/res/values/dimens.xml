@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <dimen name="smart_guide_text_size">20sp</dimen>
+  <dimen name="smart_guide_horizontal_padding">8dp</dimen>
+  <dimen name="smart_guide_vertical_padding">8dp</dimen>
+
+</resources>

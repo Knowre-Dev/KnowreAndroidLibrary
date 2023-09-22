@@ -1,13 +1,20 @@
 package com.knowre.android.myscript.iink.view
 
 import android.content.Context
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.core.content.res.ResourcesCompat
+import com.knowre.android.myscript.iink.FolderHandler
 import com.knowre.android.myscript.iink.MyScriptApi
 import com.knowre.android.myscript.iink.MyScriptModule
+import com.knowre.android.myscript.iink.ResourceHandler
 import com.knowre.android.myscript.iink.databinding.ViewMyscriptBinding
+import com.myscript.iink.uireferenceimplementation.FontUtils
 import com.myscript.iink.uireferenceimplementation.R
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 
 
 class MyScriptView constructor(
@@ -18,11 +25,35 @@ class MyScriptView constructor(
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
 
+    private val folderHandler = FolderHandler.getInitial(context)
+
     private val myScriptModule: MyScriptModule = MyScriptModule(
-        context = context,
-        editorView = findViewById(R.id.editor_view)
+        editorView = findViewById(R.id.editor_view),
+        view = this,
+        theme = context.resources.openRawResource(com.knowre.android.myscript.iink.R.raw.theme).use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toString(StandardCharsets.UTF_8.name())
+            }
+        },
+        typefaces = provideTypefaces(),
+        resourceManager = ResourceHandler(context, folderHandler),
+        folderHandler = folderHandler
     )
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        api().close()
+    }
+
     fun api(): MyScriptApi = myScriptModule
+
+    private fun provideTypefaces(): Map<String, Typeface> {
+        val typefaces = FontUtils.loadFontsFromAssets(context.assets) ?: mutableMapOf()
+        ResourcesCompat.getFont(context, com.knowre.android.myscript.iink.R.font.symbola)?.let {
+            typefaces["SYMBOLA"] = it
+        }
+        return typefaces
+    }
 
 }

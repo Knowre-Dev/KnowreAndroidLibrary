@@ -1,8 +1,11 @@
 package com.knowre.android.myscript.iink
 
-import android.content.Context
+import android.graphics.Typeface
 import android.view.View
 import com.knowre.android.myscript.iink.certificate.MyCertificate
+import com.knowre.android.myscript.iink.view.style
+import com.myscript.iink.ContentPackage
+import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.MimeType
@@ -10,55 +13,58 @@ import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.EditorBinding
 import com.myscript.iink.uireferenceimplementation.EditorView
 import com.myscript.iink.uireferenceimplementation.InputController
+import kotlinx.coroutines.Job
 import java.io.File
 
 
 internal class MyScriptModule(
-    private val editorView: EditorView,
-    context: Context
+    editorView: EditorView,
+    theme: String,
+    typefaces: Map<String, Typeface>,
+    private val view: View,
+    private val resourceManager: ResourceHandler,
+    private val folderHandler: FolderHandler
 
 ) : MyScriptApi {
 
-    private val engine: Engine = Engine.create(MyCertificate.getBytes())
-    private val editorBinding = EditorBinding(engine, mapOf())
-    private val editorData = editorBinding.openEditor(editorView)
+    private var engine: Engine? = Engine.create(MyCertificate.getBytes())
+    private val editorData = EditorBinding(engine, typefaces).openEditor(editorView)
     private val editor: Editor get() = editorData.editor!!
-
-//    private val resourceManager = ResourceManager(context)
-
-    private val mathResourceSimplePath = "resources/math"
-    private val configFileDirectory: File = context.cacheDir
-    private val resourceFileDirectory = File(configFileDirectory, mathResourceSimplePath).apply {
-        mkdirs()
-    }
 
     private var listener: MyScriptInterpretListener? = null
 
-    private val configFile = File(configFileDirectory, "math.conf").apply {
-        writeText(createMathConfig("grammar", "math-grm-standard.res"))
-    }
+    private var contentPackage: ContentPackage? = null
+    private var contentPart: ContentPart? = null
+
+    private var job: Job? = null
 
     init {
-        context.copyAssetFileTo(assetFileName = "resources/math/math-ak.res", outputFile = File(resourceFileDirectory, "math-ak.res"))
-        context.copyAssetFileTo(assetFileName = "resources/math/math-grm-standard.res", outputFile = File(resourceFileDirectory, "math-grm-standard.res"))
+        engine!!.configuration
+            .ofGeneral()
+            .setConfigFilePath(folderHandler.configFolder.path)
+            .setContentPackageTempFolder(folderHandler.contentPackageTempFolder.path)
 
-        engine.configuration.setStringArray("configuration-manager.search-path", arrayOf(configFileDirectory.path))
-        engine.configuration.setString("content-package.temp-folder", configFileDirectory.path + File.separator + "tmp")
+        editor.configuration
+            .ofMath()
+            .isMathSolverEnable(false)
+            .isConvertAnimationEnable(true)
 
-        editor.configuration.setString("math.configuration.bundle", "math")
-        editor.configuration.setString("math.configuration.name", "grammar")
-        editor.configuration.setBoolean("math.solver.enable", true)
+        editor.theme = theme
+
+        contentPackage = engine!!.createPackage(folderHandler.packageFolder)
+            .also { contentPart = it.createPart("Math") }
 
         with(editor) {
             addListener(
                 contentChanged = { editor, _ ->
-                    convert()
                     listener?.onInterpreted(editor.export_(null, MimeType.LATEX))
+                    view.postDelayed({ convert() }, 1000)
                 },
                 onError = { _, _, _, message ->
                     listener?.onError(message)
                 }
             )
+            part = contentPart
         }
 
         editorData.inputController?.inputMode = InputController.INPUT_MODE_FORCE_PEN
@@ -83,27 +89,34 @@ internal class MyScriptModule(
     }
 
     override fun setPenColor(color: Int) {
-
+        try {
+            editor.toolController.setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
+        } catch (e: IllegalStateException) {
+            // a pointer event sequence is in progress, not allowed to re-configure or change tool
+        }
     }
 
     override fun setPointerTool(pointerTool: PointerTool) {
-
+//        editor.toolController.setToolForType()
     }
 
-    override fun setGrammar(file: File) {
-//        file.copyTo(File(resourceFileDirectory, file.name), overwrite = true)
-//
-//        configFile.writeText("")
-//        configFile.writeText(createMathConfig("grammar", file.name))
-//
-//        editor.configuration
-//            .setStringArray("configuration-manager.search-path", arrayOf(configFileDirectory.path))
-//        editor.configuration
-//            .setString("math.configuration.name", "grammar")
+    override fun setGrammar(file: File?) {
+        file
+            ?.let {
+                file.copyTo(File(folderHandler.mathResourceFolder, file.name), overwrite = true)
+                resourceManager.setConfigFile(file.name)
+            }
+            ?: run { resourceManager.setConfigFile() }
 
-        editor.part = engine
-            .createPackage(File(configFileDirectory, "File1.iink"))
-            .createPart("Math")
+        contentPackage?.let { contentPackage ->
+            contentPart?.let {
+                contentPackage.removePart(it)
+                it.close()
+            }
+            contentPart = contentPackage.createPart("Math")
+        }
+
+        editor.part = contentPart
     }
 
     override fun deleteAll() {
@@ -111,6 +124,7 @@ internal class MyScriptModule(
     }
 
     override fun convert() {
+        job?.cancel()
         editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
     }
 
@@ -124,18 +138,18 @@ internal class MyScriptModule(
         this.listener = listener
     }
 
-    private fun createMathConfig(configName: String, grammarName: String) = """
-            Bundle-Version: 1.0
-            Bundle-Name: math
-            Configuration-Script:
-             AddResDir ./resources
+    override fun close() {
+        closePackage()
+        editor.renderer.close()
+        editor.close()
+        engine = null
+    }
 
-            Name: grammar
-            Type: Math
-            Configuration-Script:
-             AddResource math/math-ak.res
-             AddResource math/$grammarName
-        """
-        .trimIndent()
+    private fun closePackage() {
+        contentPart?.let { it.close() }
+        contentPackage?.let { it.close() }
+        contentPart = null
+        contentPackage = null
+    }
 
 }

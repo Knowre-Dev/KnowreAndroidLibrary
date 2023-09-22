@@ -29,7 +29,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.knowre.android.kal.myscript.MyScriptPadView
-        android:id="@+id/my_script"
+        android:id="@+id/my_script_pad"
         android:layout_width="match_parent"
         android:layout_height="400dp"
         android:layout_marginTop="100dp"

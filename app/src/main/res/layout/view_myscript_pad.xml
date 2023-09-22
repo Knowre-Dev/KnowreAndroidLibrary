@@ -11,8 +11,7 @@
         android:layout_margin="10dp"
         android:text="DELETE ALL"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintTop_toBottomOf="@+id/latex" />
     <Button
         android:id="@+id/convert"
         android:layout_width="wrap_content"
@@ -21,11 +20,70 @@
         android:text="convert"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@id/delete_all"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/latex" />
+
+    <Button
+        android:id="@+id/digit_only_grammar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="n_digit_only"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/convert"
+        app:layout_constraintTop_toBottomOf="@+id/latex" />
+
+    <Button
+        android:id="@+id/default_grammar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="default"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/digit_only_grammar"
+        app:layout_constraintTop_toBottomOf="@+id/latex" />
+
+    <Button
+        android:id="@+id/red"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="red"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/delete_all" />
+
+    <Button
+        android:id="@+id/blue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="blue"
+        app:layout_constraintEnd_toStartOf="@+id/red"
+        app:layout_constraintTop_toBottomOf="@+id/delete_all" />
+
+    <Button
+        android:id="@+id/black"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="black"
+        app:layout_constraintEnd_toStartOf="@id/blue"
+        app:layout_constraintTop_toBottomOf="@+id/delete_all" />
+
+    <TextView
+        android:id="@+id/latex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_margin="10dp"
+        android:textSize="20dp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <com.knowre.android.myscript.iink.view.MyScriptView
         android:id="@+id/my_script"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

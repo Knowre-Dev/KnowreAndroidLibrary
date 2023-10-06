@@ -1,8 +1,5 @@
 package com.knowre.android.myscript.iink
 
-import android.graphics.Typeface
-import android.view.View
-import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.knowre.android.myscript.iink.view.style
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
@@ -11,11 +8,8 @@ import com.myscript.iink.Engine
 import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
 import com.myscript.iink.PointerType
-import com.myscript.iink.uireferenceimplementation.EditorBinding
-import com.myscript.iink.uireferenceimplementation.EditorView
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -23,78 +17,66 @@ import java.io.File
 
 
 internal class MyScriptModule(
-    editorView: EditorView,
-    theme: String,
-    typefaces: Map<String, Typeface>,
-    folders: Folders,
-    private val resourceManager: ResourceHandler
+    engine: Engine,
+    configFolder: File,
+    contentPackageTempFolder: File,
+    packageFolder: File,
+    private val inputController: InputController,
+    private val editor: Editor,
+    private val resourceManager: ResourceHandler,
+    private val scope: CoroutineScope
 
 ) : MyScriptApi {
 
-    private val engine: Engine = Engine.create(MyCertificate.getBytes())
-    private val editorData = EditorBinding(engine, typefaces).openEditor(editorView)
-    private val editor: Editor get() = editorData.editor!!
+    companion object {
+        private const val MATH_PART_NAME = "Math"
+    }
 
     private var listener: MyScriptInterpretListener? = null
 
     private var contentPackage: ContentPackage? = null
     private var contentPart: ContentPart? = null
 
-    private var job: Job? = null
+    private var convertStandby: Job? = null
 
     private var lastInterpretedLaTex: String = ""
 
     init {
         engine.configuration
             .ofGeneral()
-            .setConfigFilePath(folders.configFolder.path)
-            .setContentPackageTempFolder(folders.contentPackageTempFolder.path)
+            .setConfigFilePath(configFolder.path)
+            .setContentPackageTempFolder(contentPackageTempFolder.path)
 
-        editor.configuration
-            .ofMath()
-            .isMathSolverEnable(false)
-            .isConvertAnimationEnable(true)
-
-        editor.theme = theme
-
-        contentPackage = engine.createPackage(folders.packageFolder)
-            .also { contentPart = it.createPart("Math") }
+        contentPackage = engine.createPackage(packageFolder)
+            .also { contentPart = it.createPart(MATH_PART_NAME) }
 
         with(editor) {
+            configuration
+                .ofMath()
+                .isMathSolverEnable(false)
+                .isConvertAnimationEnable(true)
+
             addListener(
                 contentChanged = { editor, _ ->
                     val interpretedLaTex = editor.export_(null, MimeType.LATEX)
-
                     if (lastInterpretedLaTex == interpretedLaTex) return@addListener
-
                     lastInterpretedLaTex = interpretedLaTex
 
                     listener?.onInterpreted(lastInterpretedLaTex)
 
-                    job?.cancel()
-                    job = CoroutineScope(Dispatchers.Main).launch {
+                    convertStandby?.cancel()
+                    convertStandby = scope.launch {
                         delay(1000)
                         convert()
                     }
                 },
-                onError = { _, _, _, message ->
-                    listener?.onError(message)
-                }
+                onError = { _, _, _, message -> listener?.onError(message) }
             )
+
             part = contentPart
         }
 
-        editorData.inputController?.inputMode = InputController.INPUT_MODE_FORCE_PEN
-
-        with(editorView) {
-            post {
-                renderer?.apply {
-                    setViewOffset(0f, 0f)
-                    viewScale = 1f
-                }
-                visibility = View.VISIBLE
-            }
-        }
+        inputController.inputMode = InputController.INPUT_MODE_FORCE_PEN
     }
 
     override fun undo() {
@@ -104,6 +86,21 @@ internal class MyScriptModule(
     override fun redo() {
         editor.redo()
     }
+
+    override fun deleteAll() {
+        editor.clear()
+    }
+
+    override fun convert() {
+        convertStandby?.cancel()
+        editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
+    }
+
+    override fun getCurrentLatex() = editor.export_(null, MimeType.LATEX)
+
+    override fun canRedo(): Boolean = editor.canRedo()
+
+    override fun canUndo(): Boolean = editor.canUndo()
 
     override fun setPenColor(color: Int) {
         try {
@@ -124,25 +121,14 @@ internal class MyScriptModule(
                 contentPackage.removePart(part)
                 part.close()
             }
-            contentPart = contentPackage.createPart("Math")
+            contentPart = contentPackage.createPart(MATH_PART_NAME)
         }
         editor.part = contentPart
     }
 
-    override fun deleteAll() {
-        editor.clear()
+    override fun setTheme(theme: String) {
+        editor.theme = theme
     }
-
-    override fun convert() {
-        job?.cancel()
-        editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
-    }
-
-    override fun getCurrentLatex() = editor.export_(null, MimeType.LATEX)
-
-    override fun canRedo(): Boolean = editor.canRedo()
-
-    override fun canUndo(): Boolean = editor.canUndo()
 
     override fun setInterpretListener(listener: MyScriptInterpretListener) {
         this.listener = listener
@@ -150,24 +136,19 @@ internal class MyScriptModule(
 
     private fun pointerType(isHandDrawingAllowed: Boolean, pointerTool: PointerTool): PointerType {
         return if (!isHandDrawingAllowed) {
-            editorData.inputController?.inputMode = InputController.INPUT_MODE_AUTO
+            inputController.inputMode = InputController.INPUT_MODE_AUTO
             if (pointerTool == PointerTool.HAND) PointerType.TOUCH else PointerType.PEN
         } else {
-            editorData.inputController?.inputMode =
-                if (pointerTool == PointerTool.HAND) InputController.INPUT_MODE_FORCE_TOUCH else InputController.INPUT_MODE_FORCE_PEN
+            inputController.inputMode = if (pointerTool == PointerTool.HAND) InputController.INPUT_MODE_FORCE_TOUCH else InputController.INPUT_MODE_FORCE_PEN
             PointerType.PEN
         }
     }
 
     override fun close() {
-        closePackage()
-        editor.renderer.close()
-        editor.close()
-    }
-
-    private fun closePackage() {
         contentPart?.close()
         contentPackage?.close()
+        editor.renderer.close()
+        editor.close()
     }
 
 }

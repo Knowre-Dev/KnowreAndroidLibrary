@@ -25,19 +25,18 @@ class MyScriptView constructor(
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private val folderHandler = Folders.getInitial(context)
+    private val folders = Folders.getInitial(context)
 
     private val myScriptModule: MyScriptModule = MyScriptModule(
         editorView = findViewById(R.id.editor_view),
-        theme = context.resources.openRawResource(com.knowre.android.myscript.iink.R.raw.theme).use { input ->
-            ByteArrayOutputStream().use { output ->
-                input.copyTo(output)
-                output.toString(StandardCharsets.UTF_8.name())
-            }
-        },
+        theme = theme(),
         typefaces = provideTypefaces(),
-        resourceManager = ResourceHandler(context, folderHandler),
-        folders = folderHandler
+        resourceManager = ResourceHandler(
+            context,
+            configFolder = folders.configFolder,
+            mathResourceFolder = folders.mathResourceFolder
+        ),
+        folders = folders
     )
 
     override fun onDetachedFromWindow() {
@@ -46,6 +45,15 @@ class MyScriptView constructor(
     }
 
     fun api(): MyScriptApi = myScriptModule
+
+    private fun theme(): String {
+        return context.resources.openRawResource(com.knowre.android.myscript.iink.R.raw.theme).use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toString(StandardCharsets.UTF_8.name())
+            }
+        }
+    }
 
     private fun provideTypefaces(): Map<String, Typeface> {
         val typefaces = FontUtils.loadFontsFromAssets(context.assets) ?: mutableMapOf()

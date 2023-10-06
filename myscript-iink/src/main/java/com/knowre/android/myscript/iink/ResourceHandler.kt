@@ -5,28 +5,34 @@ import java.io.File
 
 
 internal class ResourceHandler constructor(
-    private val context: Context,
-    private val folderHandler: Folders
+    context: Context,
+    configFolder: File,
+    private val mathResourceFolder: File
 
 ) {
 
     companion object {
+        private const val MATH_AK_RESOURCE_NAME = "math-ak.res"
         private const val DEFAULT_GRAMMAR_NAME = "math-grm-standard.res"
+        private const val STANDARD_CONFIG_NAME = "standard"
     }
 
-    private val configFile = File(folderHandler.configFolder, "math.conf")
+    private val configFile = File(configFolder, "math.conf")
 
     init {
         with(context) {
-            copyAssetFileTo(assetFileName = "resources/math/math-ak.res", outputFile = File(folderHandler.mathResourceFolder, "math-ak.res"))
-            copyAssetFileTo(assetFileName = "resources/math/math-grm-standard.res", outputFile = File(folderHandler.mathResourceFolder, "math-grm-standard.res"))
+            copyAssetFileTo(assetFileName = "resources/math/$MATH_AK_RESOURCE_NAME", outputFile = File(mathResourceFolder, MATH_AK_RESOURCE_NAME))
+            copyAssetFileTo(assetFileName = "resources/math/$DEFAULT_GRAMMAR_NAME", outputFile = File(mathResourceFolder, DEFAULT_GRAMMAR_NAME))
         }
 
-        setConfigFile()
+        setGrammar(file = null)
     }
 
-    fun setConfigFile(grammarName: String = DEFAULT_GRAMMAR_NAME) {
-        configFile.writeText(createMathConfig("standard", grammarName))
+    fun setGrammar(file: File?) {
+        file?.let {
+            file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
+            configFile.writeText(createMathConfig(STANDARD_CONFIG_NAME, file.name))
+        } ?: run { configFile.writeText(createMathConfig(STANDARD_CONFIG_NAME, DEFAULT_GRAMMAR_NAME)) }
     }
 
     private fun createMathConfig(configName: String, grammarName: String) = """

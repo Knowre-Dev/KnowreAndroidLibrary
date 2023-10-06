@@ -1,7 +1,6 @@
 package com.knowre.android.myscript.iink
 
 import android.graphics.Typeface
-import android.util.Log
 import android.view.View
 import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.knowre.android.myscript.iink.view.style
@@ -27,8 +26,8 @@ internal class MyScriptModule(
     editorView: EditorView,
     theme: String,
     typefaces: Map<String, Typeface>,
-    private val resourceManager: ResourceHandler,
-    private val folders: Folders
+    folders: Folders,
+    private val resourceManager: ResourceHandler
 
 ) : MyScriptApi {
 
@@ -75,7 +74,6 @@ internal class MyScriptModule(
                     job?.cancel()
                     job = CoroutineScope(Dispatchers.Main).launch {
                         delay(1000)
-                        Log.d("MY_LOG", "convert")
                         convert()
                     }
                 },
@@ -120,19 +118,14 @@ internal class MyScriptModule(
     }
 
     override fun setGrammar(file: File?) {
-        file?.let {
-            file.copyTo(File(folders.mathResourceFolder, file.name), overwrite = true)
-            resourceManager.setConfigFile(file.name)
-        } ?: run { resourceManager.setConfigFile() }
-
+        resourceManager.setGrammar(file)
         contentPackage?.let { contentPackage ->
-            contentPart?.let {
-                contentPackage.removePart(it)
-                it.close()
+            contentPart?.let { part ->
+                contentPackage.removePart(part)
+                part.close()
             }
             contentPart = contentPackage.createPart("Math")
         }
-
         editor.part = contentPart
     }
 

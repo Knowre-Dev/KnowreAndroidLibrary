@@ -1,7 +1,6 @@
 package com.knowre.android.myscript.iink
 
 import androidx.annotation.ColorInt
-import com.myscript.iink.PointerTool
 import java.io.File
 
 
@@ -11,7 +10,7 @@ interface MyScriptApi {
     fun deleteAll()
     fun setGrammar(file: File?)
     fun setPenColor(@ColorInt color: Int)
-    fun setPointerTool(pointerTool: PointerTool)
+    fun setPointerTool(toolType: ToolType, isHandDrawingAllowed: Boolean)
     fun convert()
     fun getCurrentLatex(): String
     fun canRedo(): Boolean

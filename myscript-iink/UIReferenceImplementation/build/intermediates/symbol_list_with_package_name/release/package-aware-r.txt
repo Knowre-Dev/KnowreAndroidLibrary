@@ -1,0 +1,18 @@
+com.myscript.iink.uireferenceimplementation
+color control_gray
+color control_white_transparent
+color word_gray
+dimen smart_guide_horizontal_padding
+dimen smart_guide_text_size
+dimen smart_guide_vertical_padding
+drawable ic_smart_guide_more
+drawable smart_guide_bottom_border
+id editor_view
+id layer_iink
+id smart_guide_more_view
+id smart_guide_scroll_view
+id smart_guide_stack_view
+id smart_guide_view
+id smart_guide_word_view
+layout editor_view
+layout smart_guide_layout

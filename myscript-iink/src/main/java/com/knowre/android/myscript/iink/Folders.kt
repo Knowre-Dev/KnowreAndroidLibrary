@@ -4,7 +4,7 @@ import android.content.Context
 import java.io.File
 
 
-internal class FolderHandler constructor(private val rootFolder: File) {
+internal class Folders constructor(private val rootFolder: File) {
 
     companion object {
         private const val MY_SCRIPT_FOLDER_NAME = "myscript"
@@ -13,7 +13,7 @@ internal class FolderHandler constructor(private val rootFolder: File) {
         private const val PACKAGE_FOLDER_SIMPLE_PATH = "/$MY_SCRIPT_FOLDER_NAME/package"
         private const val CONTENT_PACKAGE_TEMP_FOLDER_SIMPLE_PATH = "/$MY_SCRIPT_FOLDER_NAME/tmp"
 
-        fun getInitial(context: Context) = FolderHandler(context.filesDir)
+        fun getInitial(context: Context) = Folders(context.filesDir)
     }
 
     val configFolder

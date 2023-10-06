@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.core.content.res.ResourcesCompat
-import com.knowre.android.myscript.iink.FolderHandler
+import com.knowre.android.myscript.iink.Folders
 import com.knowre.android.myscript.iink.MyScriptApi
 import com.knowre.android.myscript.iink.MyScriptModule
 import com.knowre.android.myscript.iink.ResourceHandler
@@ -25,11 +25,10 @@ class MyScriptView constructor(
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private val folderHandler = FolderHandler.getInitial(context)
+    private val folderHandler = Folders.getInitial(context)
 
     private val myScriptModule: MyScriptModule = MyScriptModule(
         editorView = findViewById(R.id.editor_view),
-        view = this,
         theme = context.resources.openRawResource(com.knowre.android.myscript.iink.R.raw.theme).use { input ->
             ByteArrayOutputStream().use { output ->
                 input.copyTo(output)
@@ -38,7 +37,7 @@ class MyScriptView constructor(
         },
         typefaces = provideTypefaces(),
         resourceManager = ResourceHandler(context, folderHandler),
-        folderHandler = folderHandler
+        folders = folderHandler
     )
 
     override fun onDetachedFromWindow() {

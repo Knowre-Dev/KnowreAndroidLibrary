@@ -6,13 +6,15 @@ import java.io.File
 
 internal class ResourceHandler constructor(
     private val context: Context,
-    private val folderHandler: FolderHandler
+    private val folderHandler: Folders
 
 ) {
 
     companion object {
         private const val DEFAULT_GRAMMAR_NAME = "math-grm-standard.res"
     }
+
+    private val configFile = File(folderHandler.configFolder, "math.conf")
 
     init {
         with(context) {
@@ -24,8 +26,7 @@ internal class ResourceHandler constructor(
     }
 
     fun setConfigFile(grammarName: String = DEFAULT_GRAMMAR_NAME) {
-        File(folderHandler.configFolder, "math.conf")
-            .apply { writeText(createMathConfig("standard", grammarName)) }
+        configFile.writeText(createMathConfig("standard", grammarName))
     }
 
     private fun createMathConfig(configName: String, grammarName: String) = """

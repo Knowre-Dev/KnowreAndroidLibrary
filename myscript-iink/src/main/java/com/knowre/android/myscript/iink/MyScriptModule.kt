@@ -1,6 +1,7 @@
 package com.knowre.android.myscript.iink
 
 import android.graphics.Typeface
+import android.util.Log
 import android.view.View
 import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.knowre.android.myscript.iink.view.style
@@ -10,10 +11,15 @@ import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
+import com.myscript.iink.PointerType
 import com.myscript.iink.uireferenceimplementation.EditorBinding
 import com.myscript.iink.uireferenceimplementation.EditorView
 import com.myscript.iink.uireferenceimplementation.InputController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -21,13 +27,12 @@ internal class MyScriptModule(
     editorView: EditorView,
     theme: String,
     typefaces: Map<String, Typeface>,
-    private val view: View,
     private val resourceManager: ResourceHandler,
-    private val folderHandler: FolderHandler
+    private val folders: Folders
 
 ) : MyScriptApi {
 
-    private var engine: Engine? = Engine.create(MyCertificate.getBytes())
+    private val engine: Engine = Engine.create(MyCertificate.getBytes())
     private val editorData = EditorBinding(engine, typefaces).openEditor(editorView)
     private val editor: Editor get() = editorData.editor!!
 
@@ -38,11 +43,13 @@ internal class MyScriptModule(
 
     private var job: Job? = null
 
+    private var lastInterpretedLaTex: String = ""
+
     init {
-        engine!!.configuration
+        engine.configuration
             .ofGeneral()
-            .setConfigFilePath(folderHandler.configFolder.path)
-            .setContentPackageTempFolder(folderHandler.contentPackageTempFolder.path)
+            .setConfigFilePath(folders.configFolder.path)
+            .setContentPackageTempFolder(folders.contentPackageTempFolder.path)
 
         editor.configuration
             .ofMath()
@@ -51,14 +58,26 @@ internal class MyScriptModule(
 
         editor.theme = theme
 
-        contentPackage = engine!!.createPackage(folderHandler.packageFolder)
+        contentPackage = engine.createPackage(folders.packageFolder)
             .also { contentPart = it.createPart("Math") }
 
         with(editor) {
             addListener(
                 contentChanged = { editor, _ ->
-                    listener?.onInterpreted(editor.export_(null, MimeType.LATEX))
-                    view.postDelayed({ convert() }, 1000)
+                    val interpretedLaTex = editor.export_(null, MimeType.LATEX)
+
+                    if (lastInterpretedLaTex == interpretedLaTex) return@addListener
+
+                    lastInterpretedLaTex = interpretedLaTex
+
+                    listener?.onInterpreted(lastInterpretedLaTex)
+
+                    job?.cancel()
+                    job = CoroutineScope(Dispatchers.Main).launch {
+                        delay(1000)
+                        Log.d("MY_LOG", "convert")
+                        convert()
+                    }
                 },
                 onError = { _, _, _, message ->
                     listener?.onError(message)
@@ -96,17 +115,15 @@ internal class MyScriptModule(
         }
     }
 
-    override fun setPointerTool(pointerTool: PointerTool) {
-//        editor.toolController.setToolForType()
+    override fun setPointerTool(toolType: ToolType, isHandDrawingAllowed: Boolean) {
+        editor.toolController.setToolForType(pointerType(isHandDrawingAllowed, toolType.toPointerTool), toolType.toPointerTool)
     }
 
     override fun setGrammar(file: File?) {
-        file
-            ?.let {
-                file.copyTo(File(folderHandler.mathResourceFolder, file.name), overwrite = true)
-                resourceManager.setConfigFile(file.name)
-            }
-            ?: run { resourceManager.setConfigFile() }
+        file?.let {
+            file.copyTo(File(folders.mathResourceFolder, file.name), overwrite = true)
+            resourceManager.setConfigFile(file.name)
+        } ?: run { resourceManager.setConfigFile() }
 
         contentPackage?.let { contentPackage ->
             contentPart?.let {
@@ -138,18 +155,26 @@ internal class MyScriptModule(
         this.listener = listener
     }
 
+    private fun pointerType(isHandDrawingAllowed: Boolean, pointerTool: PointerTool): PointerType {
+        return if (!isHandDrawingAllowed) {
+            editorData.inputController?.inputMode = InputController.INPUT_MODE_AUTO
+            if (pointerTool == PointerTool.HAND) PointerType.TOUCH else PointerType.PEN
+        } else {
+            editorData.inputController?.inputMode =
+                if (pointerTool == PointerTool.HAND) InputController.INPUT_MODE_FORCE_TOUCH else InputController.INPUT_MODE_FORCE_PEN
+            PointerType.PEN
+        }
+    }
+
     override fun close() {
         closePackage()
         editor.renderer.close()
         editor.close()
-        engine = null
     }
 
     private fun closePackage() {
-        contentPart?.let { it.close() }
-        contentPackage?.let { it.close() }
-        contentPart = null
-        contentPackage = null
+        contentPart?.close()
+        contentPackage?.close()
     }
 
 }

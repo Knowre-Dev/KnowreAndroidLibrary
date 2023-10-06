@@ -8,7 +8,11 @@ import android.widget.FrameLayout
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
 import com.knowre.android.myscript.iink.MyScriptApi
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
+import com.knowre.android.myscript.iink.ToolType
 import com.knowre.android.myscript.iink.copyAssetFileTo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -23,12 +27,22 @@ internal class MyScriptPadView constructor(
     private val api: MyScriptApi = binding.myScript.api()
 
     init {
+        binding.redo.isEnabled = false
+        binding.undo.isEnabled = false
+
         binding.convert.setOnClickListener { binding.myScript.api().convert() }
         binding.deleteAll.setOnClickListener { binding.myScript.api().deleteAll() }
         binding.myScript.api().setInterpretListener(object : MyScriptInterpretListener {
             override fun onInterpreted(interpreted: String) {
+                val canRedo = api.canRedo()
+                val canUndo = api.canUndo()
+
                 binding.latex.text = interpreted
-                Log.d("MY_LOG", "interpreted $interpreted")
+                CoroutineScope(Dispatchers.Main).launch {
+                    binding.redo.isEnabled = canRedo
+                    binding.undo.isEnabled = canUndo
+                }
+                Log.d("MY_LOG", "onInterpreted $interpreted, $canRedo, $canUndo")
             }
 
             override fun onError(message: String) {
@@ -58,6 +72,27 @@ internal class MyScriptPadView constructor(
 
         binding.black.setOnClickListener {
             api.setPenColor(0x000000)
+        }
+
+        binding.penSwitch.setOnCheckedChangeListener { _, isChecked ->
+            api.setPointerTool(ToolType.PEN, isHandDrawingAllowed = !isChecked)
+            binding.eraserSwitch.isChecked = false
+        }
+
+        binding.eraserSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                api.setPointerTool(ToolType.ERASER, isHandDrawingAllowed = !binding.penSwitch.isChecked)
+            } else {
+                api.setPointerTool(ToolType.PEN, isHandDrawingAllowed = !binding.penSwitch.isChecked)
+            }
+        }
+
+        binding.redo.setOnClickListener {
+            api.redo()
+        }
+
+        binding.undo.setOnClickListener {
+            api.undo()
         }
     }
 

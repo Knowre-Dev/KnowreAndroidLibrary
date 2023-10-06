@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="control_gray">#959da6</color>
+    <color name="control_white_transparent">#f2ffffff</color>
+    <color name="word_gray">#bfbfbf</color>
+    <dimen name="smart_guide_horizontal_padding">8dp</dimen>
+    <dimen name="smart_guide_text_size">20sp</dimen>
+    <dimen name="smart_guide_vertical_padding">8dp</dimen>
+</resources>

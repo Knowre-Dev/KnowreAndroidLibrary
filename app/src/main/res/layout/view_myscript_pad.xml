@@ -4,6 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.knowre.android.myscript.iink.view.MyScriptView
+        android:id="@+id/my_script"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <Button
         android:id="@+id/delete_all"
         android:layout_width="wrap_content"
@@ -11,7 +16,8 @@
         android:layout_margin="10dp"
         android:text="DELETE ALL"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/latex" />
+        app:layout_constraintTop_toTopOf="parent" />
+
     <Button
         android:id="@+id/convert"
         android:layout_width="wrap_content"
@@ -20,8 +26,7 @@
         android:text="convert"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@id/delete_all"
-        app:layout_constraintTop_toBottomOf="@+id/latex" />
-
+        app:layout_constraintTop_toTopOf="parent" />
     <Button
         android:id="@+id/digit_only_grammar"
         android:layout_width="wrap_content"
@@ -30,8 +35,7 @@
         android:text="n_digit_only"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@id/convert"
-        app:layout_constraintTop_toBottomOf="@+id/latex" />
-
+        app:layout_constraintTop_toTopOf="parent" />
     <Button
         android:id="@+id/default_grammar"
         android:layout_width="wrap_content"
@@ -40,7 +44,7 @@
         android:text="default"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@id/digit_only_grammar"
-        app:layout_constraintTop_toBottomOf="@+id/latex" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/red"
@@ -69,21 +73,53 @@
         app:layout_constraintEnd_toStartOf="@id/blue"
         app:layout_constraintTop_toBottomOf="@+id/delete_all" />
 
+    <Button
+        android:id="@+id/redo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="REDO"
+        app:layout_constraintEnd_toStartOf="@id/black"
+        app:layout_constraintTop_toBottomOf="@+id/delete_all" />
+
+    <Button
+        android:id="@+id/undo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="UNDO"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/redo"
+        app:layout_constraintTop_toBottomOf="@+id/delete_all" />
+
     <TextView
         android:id="@+id/latex"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:layout_margin="10dp"
-        android:textSize="20dp"
+        android:gravity="right"
         android:textColor="@color/black"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.knowre.android.myscript.iink.view.MyScriptView
-        android:id="@+id/my_script"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/eraser_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="Eraser"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pen_switch" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/pen_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="Pen"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

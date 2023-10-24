@@ -20,6 +20,11 @@ internal class MathConfiguration constructor(private val configuration: Configur
         return this
     }
 
+    fun setSessionTime(millis: Long): MathConfiguration {
+        configuration.setNumber("math.session-time", millis)
+        return this
+    }
+
     fun isMathSolverEnable(isEnable: Boolean): MathConfiguration {
         configuration.setBoolean("math.solver.enable", isEnable)
         return this

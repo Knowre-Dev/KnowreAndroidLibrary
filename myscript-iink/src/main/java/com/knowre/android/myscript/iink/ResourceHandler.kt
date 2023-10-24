@@ -14,10 +14,25 @@ internal class ResourceHandler constructor(
     companion object {
         private const val MATH_AK_RESOURCE_NAME = "math-ak.res"
         private const val DEFAULT_GRAMMAR_NAME = "math-grm-standard.res"
-        private const val STANDARD_CONFIG_NAME = "standard"
     }
 
     private val configFile = File(configFolder, "math.conf")
+
+    private val mathConfigTemplate = { grammarName: String ->
+        """
+            Bundle-Version: 1.0
+            Bundle-Name: math
+            Configuration-Script:
+             AddResDir ../resources
+    
+            Name: standard
+            Type: Math
+            Configuration-Script:
+             AddResource math/math-ak.res
+             AddResource math/$grammarName
+        """
+            .trimIndent()
+    }
 
     init {
         with(context) {
@@ -29,24 +44,12 @@ internal class ResourceHandler constructor(
     }
 
     fun setGrammar(file: File?) {
-        file?.let {
-            file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
-            configFile.writeText(createMathConfig(STANDARD_CONFIG_NAME, file.name))
-        } ?: run { configFile.writeText(createMathConfig(STANDARD_CONFIG_NAME, DEFAULT_GRAMMAR_NAME)) }
+        file
+            ?.let {
+                file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
+                configFile.writeText(mathConfigTemplate(file.name))
+            }
+            ?: run { configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME)) }
     }
-
-    private fun createMathConfig(configName: String, grammarName: String) = """
-            Bundle-Version: 1.0
-            Bundle-Name: math
-            Configuration-Script:
-             AddResDir ../resources
-    
-            Name: $configName
-            Type: Math
-            Configuration-Script:
-             AddResource math/math-ak.res
-             AddResource math/$grammarName
-        """
-        .trimIndent()
 
 }

@@ -21,11 +21,13 @@ import java.io.File
  */
 private const val DRAWING = InputController.INPUT_MODE_FORCE_PEN
 private const val ERASER = InputController.INPUT_MODE_ERASER
+
 /**
  * AUTO 일 경우 pen 으로 터치할 경우 force pen 이되고 손으로 터치 할 경우 force touch 가 된다.
  */
 private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
 
+private const val MATH_PART_NAME = "Math"
 
 internal class MyScriptModule(
     engine: Engine,
@@ -39,17 +41,10 @@ internal class MyScriptModule(
 
 ) : MyScriptApi {
 
-    companion object {
-        private const val MATH_PART_NAME = "Math"
-    }
-
     private var listener: MyScriptInterpretListener? = null
-
     private var contentPackage: ContentPackage? = null
     private var contentPart: ContentPart? = null
-
     private var convertStandby: Job? = null
-
     private var lastInterpretedLaTex: String = ""
 
     init {
@@ -114,11 +109,8 @@ internal class MyScriptModule(
     override fun canUndo(): Boolean = editor.canUndo()
 
     override fun setPenColor(color: Int) {
-        try {
-            editor.toolController.setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
-        } catch (e: IllegalStateException) {
-            // a pointer event sequence is in progress, not allowed to re-configure or change tool
-        }
+        editor.toolController.setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
+            .runCatching { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
     }
 
     override fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction) {

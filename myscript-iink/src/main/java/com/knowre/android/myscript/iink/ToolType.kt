@@ -1,15 +1,40 @@
 package com.knowre.android.myscript.iink
 
 import com.myscript.iink.PointerTool
+import com.myscript.iink.PointerType
 
 
 enum class ToolType {
-    PEN, HAND, ERASER
+    PEN, HAND
 }
 
-internal val ToolType.toPointerTool: PointerTool
+enum class ToolFunction {
+    DRAWING, ERASING
+}
+
+/**
+ * [PointerType] 은 화면에 터치하기 위해 사용되는 도구가 무엇인지를 나타낸다. 때문에 [ToolType] 그대로 [PointerType] 으로 변환하면 된다.
+ */
+internal val ToolType.toPointerType: PointerType
     get() = when (this) {
-        ToolType.PEN -> PointerTool.PEN
-        ToolType.HAND -> PointerTool.HAND
-        ToolType.ERASER -> PointerTool.ERASER
+        ToolType.PEN -> PointerType.PEN
+        ToolType.HAND -> PointerType.TOUCH
+    }
+
+/**
+ * [PointerTool] 이란 [PointerType] 로 그려진 터치 정보가 어떤한 목적으로 사용될지를 나타낼지를 의미한다.
+ * [ToolType] 으로 그려진 정보가 [ToolFunction] 의 목적에 맞게 사용되도록 아래와 같은 정보를 바탕으로 적절한 [PointerTool] 로 변환한다.
+ *
+ * [PointerTool.PEN] : 해당 터치 정보를 Drawing Stroke 으로 표시함.
+ *
+ * [PointerTool.HAND] : 해당 터치 정보를 Gesture Detecting(한 칸 띄우기, 도형 정보 선 잇기 등) 에 사용함. 현재 우리 앱에서는 사용하지 않을 내용.
+ *
+ * [PointerTool.ERASER] : 해당 터치 정보를 content 를 지우는데 사용함.
+ *
+ * 우리 앱에서는 [PointerTool.HAND] 기능인 Gesture Detecting 을 사용하지 않는다.
+ */
+internal val ToolFunction.toPointerTool: PointerTool
+    get() = when (this) {
+        ToolFunction.DRAWING -> PointerTool.PEN
+        ToolFunction.ERASING -> PointerTool.ERASER
     }

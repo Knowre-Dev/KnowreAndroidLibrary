@@ -7,13 +7,24 @@ import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
-import com.myscript.iink.PointerType
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+
+/**
+ * force pen 으로 설정해야 pen 이든 touch 이든지 상관없이 drawing 을 할 수 있게 된다. force pen 이라고해서 pen 으로만 drawing 한다라고 생각하면 안된다.
+ * force pen 은 drawing 모드 force touch 는 drawing 이 아니라 gesture detecting 모드라고 생각하면 된다.
+ * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
+ */
+private const val DRAWING = InputController.INPUT_MODE_FORCE_PEN
+private const val ERASER = InputController.INPUT_MODE_ERASER
+/**
+ * AUTO 일 경우 pen 으로 터치할 경우 force pen 이되고 손으로 터치 할 경우 force touch 가 된다.
+ */
+private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
 
 
 internal class MyScriptModule(
@@ -76,7 +87,7 @@ internal class MyScriptModule(
             part = contentPart
         }
 
-        inputController.inputMode = InputController.INPUT_MODE_FORCE_PEN
+        inputController.inputMode = DRAWING
     }
 
     override fun undo() {
@@ -110,8 +121,13 @@ internal class MyScriptModule(
         }
     }
 
-    override fun setPointerTool(toolType: ToolType, isHandDrawingAllowed: Boolean) {
-        editor.toolController.setToolForType(pointerType(isHandDrawingAllowed, toolType.toPointerTool), toolType.toPointerTool)
+    override fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction) {
+        when (toolType) {
+            ToolType.PEN -> inputController.inputMode = DRAWING_BY_PEN_GESTURE_BY_HAND
+            ToolType.HAND -> inputController.inputMode = DRAWING
+        }
+
+        editor.toolController.setToolForType(toolType.toPointerType, toolFunction.toPointerTool)
     }
 
     override fun setGrammar(file: File?) {
@@ -132,16 +148,6 @@ internal class MyScriptModule(
 
     override fun setInterpretListener(listener: MyScriptInterpretListener) {
         this.listener = listener
-    }
-
-    private fun pointerType(isHandDrawingAllowed: Boolean, pointerTool: PointerTool): PointerType {
-        return if (!isHandDrawingAllowed) {
-            inputController.inputMode = InputController.INPUT_MODE_AUTO
-            if (pointerTool == PointerTool.HAND) PointerType.TOUCH else PointerType.PEN
-        } else {
-            inputController.inputMode = if (pointerTool == PointerTool.HAND) InputController.INPUT_MODE_FORCE_TOUCH else InputController.INPUT_MODE_FORCE_PEN
-            PointerType.PEN
-        }
     }
 
     override fun close() {

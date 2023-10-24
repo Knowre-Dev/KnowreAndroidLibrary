@@ -15,7 +15,7 @@ interface MyScriptApi {
     fun setGrammar(file: File?)
     fun setTheme(theme: String)
     fun setPenColor(@ColorInt color: Int)
-    fun setPointerTool(toolType: ToolType, isHandDrawingAllowed: Boolean)
+    fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction)
     fun setInterpretListener(listener: MyScriptInterpretListener)
     fun close()
 }

@@ -8,6 +8,7 @@ import android.widget.FrameLayout
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
 import com.knowre.android.myscript.iink.MyScriptApi
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
+import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
 import com.knowre.android.myscript.iink.copyAssetFileTo
 import kotlinx.coroutines.CoroutineScope
@@ -75,15 +76,16 @@ internal class MyScriptPadView constructor(
         }
 
         binding.penSwitch.setOnCheckedChangeListener { _, isChecked ->
-            api.setPointerTool(ToolType.PEN, isHandDrawingAllowed = !isChecked)
             binding.eraserSwitch.isChecked = false
+            api.setPointerTool(if (isChecked) ToolType.PEN else ToolType.HAND, ToolFunction.DRAWING)
         }
 
         binding.eraserSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val toolType = if (binding.penSwitch.isChecked) ToolType.PEN else ToolType.HAND
             if (isChecked) {
-                api.setPointerTool(ToolType.ERASER, isHandDrawingAllowed = !binding.penSwitch.isChecked)
+                api.setPointerTool(toolType, ToolFunction.ERASING)
             } else {
-                api.setPointerTool(ToolType.PEN, isHandDrawingAllowed = !binding.penSwitch.isChecked)
+                api.setPointerTool(toolType, ToolFunction.DRAWING)
             }
         }
 

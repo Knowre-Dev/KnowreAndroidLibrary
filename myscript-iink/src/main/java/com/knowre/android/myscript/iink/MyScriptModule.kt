@@ -61,6 +61,7 @@ internal class MyScriptModule(
                 .ofMath()
                 .isMathSolverEnable(false)
                 .isConvertAnimationEnable(true)
+                .setSessionTime(100)
 
             addListener(
                 contentChanged = { editor, _ ->

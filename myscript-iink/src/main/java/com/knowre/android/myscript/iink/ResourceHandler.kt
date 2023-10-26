@@ -43,6 +43,9 @@ internal class ResourceHandler constructor(
         setGrammar(file = null)
     }
 
+    /**
+     * Math grammar 를 [file] 로 변경한다. null 일 경우 기본 그래머로 설정한다.
+     */
     fun setGrammar(file: File?) {
         file
             ?.let {

@@ -4,7 +4,10 @@ import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 import com.myscript.iink.IEditorListener
+import com.myscript.iink.MimeType
 
+
+internal fun Editor.latex() = export_(null, MimeType.LATEX)
 
 internal fun Editor.addListener(
     partChanging: (editor: Editor, oldPart: ContentPart?, newPart: ContentPart?) ->Unit = { _, _,_ -> },

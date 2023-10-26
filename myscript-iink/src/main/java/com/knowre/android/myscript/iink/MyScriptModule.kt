@@ -5,7 +5,6 @@ import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.Engine
-import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
@@ -20,14 +19,14 @@ import java.io.File
  * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
  */
 private const val DRAWING = InputController.INPUT_MODE_FORCE_PEN
-private const val ERASER = InputController.INPUT_MODE_ERASER
 
 /**
- * AUTO 일 경우 pen 으로 터치할 경우 force pen 이되고 손으로 터치 할 경우 force touch 가 된다.
+ * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
  */
 private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
 
 private const val MATH_PART_NAME = "Math"
+
 
 internal class MyScriptModule(
     engine: Engine,
@@ -42,8 +41,9 @@ internal class MyScriptModule(
 ) : MyScriptApi {
 
     private var listener: MyScriptInterpretListener? = null
-    private var contentPackage: ContentPackage? = null
-    private var contentPart: ContentPart? = null
+    private var contentPackage: ContentPackage = engine.createPackage(packageFolder)
+        .also { contentPart = it.createPart(MATH_PART_NAME) }
+    private var contentPart: ContentPart
     private var convertStandby: Job? = null
     private var lastInterpretedLaTex: String = ""
 
@@ -52,9 +52,6 @@ internal class MyScriptModule(
             .ofGeneral()
             .setConfigFilePath(configFolder.path)
             .setContentPackageTempFolder(contentPackageTempFolder.path)
-
-        contentPackage = engine.createPackage(packageFolder)
-            .also { contentPart = it.createPart(MATH_PART_NAME) }
 
         with(editor) {
             configuration
@@ -65,15 +62,16 @@ internal class MyScriptModule(
 
             addListener(
                 contentChanged = { editor, _ ->
-                    val interpretedLaTex = editor.export_(null, MimeType.LATEX)
-                    if (lastInterpretedLaTex == interpretedLaTex) return@addListener
-                    lastInterpretedLaTex = interpretedLaTex
-
-                    listener?.onInterpreted(lastInterpretedLaTex)
+                    editor.latex()
+                        .also { if (lastInterpretedLaTex == it) return@addListener }
+                        .also {
+                            lastInterpretedLaTex = it
+                            listener?.onInterpreted(it)
+                        }
 
                     convertStandby?.cancel()
                     convertStandby = scope.launch {
-                        delay(1000)
+                        delay(100)
                         convert()
                     }
                 },
@@ -103,7 +101,7 @@ internal class MyScriptModule(
         editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
     }
 
-    override fun getCurrentLatex() = editor.export_(null, MimeType.LATEX)
+    override fun getCurrentLatex() = editor.latex()
 
     override fun canRedo(): Boolean = editor.canRedo()
 
@@ -123,10 +121,19 @@ internal class MyScriptModule(
         editor.toolController.setToolForType(toolType.toPointerType, toolFunction.toPointerTool)
     }
 
+    /**
+     * Math grammar 를 [file] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
+     *
+     * [ResourceHandler.setGrammar] 에서 math config 파일을 변경해 그래머를 변경하게 되는데,
+     * math config 는 [ContentPart] 가 [ContentPackage] 에 할당되기 전에 한번 설정되면, 그 이후에는 다이나믹하게 변경이 불가능하다.
+     * 때문에 config 가 변경될 경우 부득이하게, 현재 [ContentPart] 를 close 하고 새로운 [ContentPart] 를 만들어 [ContentPackage] 에 붙혀야 한다.
+     *
+     * @see [ResourceHandler.setGrammar]
+     */
     override fun setGrammar(file: File?) {
         resourceManager.setGrammar(file)
-        contentPackage?.let { contentPackage ->
-            contentPart?.let { part ->
+        contentPackage.let { contentPackage ->
+            contentPart.let { part ->
                 contentPackage.removePart(part)
                 part.close()
             }
@@ -144,8 +151,8 @@ internal class MyScriptModule(
     }
 
     override fun close() {
-        contentPart?.close()
-        contentPackage?.close()
+        contentPart.close()
+        contentPackage.close()
         editor.renderer.close()
         editor.close()
     }

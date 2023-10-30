@@ -49,7 +49,7 @@ internal class ResourceHandler constructor(
     fun setGrammar(file: File?) {
         file
             ?.let {
-                file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
+//                file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
                 configFile.writeText(mathConfigTemplate(file.name))
             }
             ?: run { configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME)) }

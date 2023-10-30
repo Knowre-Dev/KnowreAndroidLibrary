@@ -9,6 +9,7 @@ import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -28,23 +29,32 @@ private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AU
 private const val MATH_PART_NAME = "Math"
 
 
-internal class MyScriptModule(
+internal class MyScript(
     engine: Engine,
     configFolder: File,
     contentPackageTempFolder: File,
     packageFolder: File,
+    private val mathResourceFolder: File,
     private val inputController: InputController,
     private val editor: Editor,
-    private val resourceManager: ResourceHandler,
+    private val resourceHandler: ResourceHandler,
     private val scope: CoroutineScope
 
 ) : MyScriptApi {
 
     private var listener: MyScriptInterpretListener? = null
+
     private var contentPackage: ContentPackage = engine.createPackage(packageFolder)
-        .also { contentPart = it.createPart(MATH_PART_NAME) }
-    private var contentPart: ContentPart
+    private var contentPart: ContentPart = contentPackage.createPart(MATH_PART_NAME)
+        set(value) {
+            contentPackage.removePart(field)
+            field.close()
+            editor.part = value
+            field = value
+        }
+
     private var convertStandby: Job? = null
+
     private var lastInterpretedLaTex: String = ""
 
     init {
@@ -64,10 +74,8 @@ internal class MyScriptModule(
                 contentChanged = { editor, _ ->
                     editor.latex()
                         .also { if (lastInterpretedLaTex == it) return@addListener }
-                        .also {
-                            lastInterpretedLaTex = it
-                            listener?.onInterpreted(it)
-                        }
+                        .also { lastInterpretedLaTex = it }
+                        .also { listener?.onInterpreted(it) }
 
                     convertStandby?.cancel()
                     convertStandby = scope.launch {
@@ -108,7 +116,8 @@ internal class MyScriptModule(
     override fun canUndo(): Boolean = editor.canUndo()
 
     override fun setPenColor(color: Int) {
-        editor.toolController.setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
+        editor.toolController
+            .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
             .runCatching { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
     }
 
@@ -121,27 +130,6 @@ internal class MyScriptModule(
         editor.toolController.setToolForType(toolType.toPointerType, toolFunction.toPointerTool)
     }
 
-    /**
-     * Math grammar 를 [file] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
-     *
-     * [ResourceHandler.setGrammar] 에서 math config 파일을 변경해 그래머를 변경하게 되는데,
-     * math config 는 [ContentPart] 가 [ContentPackage] 에 할당되기 전에 한번 설정되면, 그 이후에는 다이나믹하게 변경이 불가능하다.
-     * 때문에 config 가 변경될 경우 부득이하게, 현재 [ContentPart] 를 close 하고 새로운 [ContentPart] 를 만들어 [ContentPackage] 에 붙혀야 한다.
-     *
-     * @see [ResourceHandler.setGrammar]
-     */
-    override fun setGrammar(file: File?) {
-        resourceManager.setGrammar(file)
-        contentPackage.let { contentPackage ->
-            contentPart.let { part ->
-                contentPackage.removePart(part)
-                part.close()
-            }
-            contentPart = contentPackage.createPart(MATH_PART_NAME)
-        }
-        editor.part = contentPart
-    }
-
     override fun setTheme(theme: String) {
         editor.theme = theme
     }
@@ -150,11 +138,38 @@ internal class MyScriptModule(
         this.listener = listener
     }
 
+    /**
+     * Math grammar 를 [file] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
+     *
+     * [ResourceHandler.setGrammar] 에서 math config 파일을 변경해 그래머를 변경하게 되는데,
+     * math config 는 [ContentPart] 가 [ContentPackage] 에 할당되기 전에 한번 설정되면,
+     * 그 이후에는 새로운 [contentPart] 를 만들어 붙이지 않는 이상 다이나믹하게 변경이 불가능하다.
+     * 때문에 config 가 변경될 경우 부득이하게(그래머 변경은 config 변경을 필요로한다.),
+     * 현재 [ContentPart] 를 close 하고 새로운 [ContentPart] 를 만들어 [ContentPackage] 에 붙혀야 한다.
+     *
+     * @see contentPart
+     * @see [ResourceHandler.setGrammar]
+     */
+    override fun loadMathGrammar(grammarName: String, byteArray: ByteArray?) {
+        resourceHandler.setGrammar(
+            byteArray?.run {
+                File(mathResourceFolder, "$grammarName.res")
+                    .apply {
+                        createNewFile()
+                        writeBytes(this@run)
+                    }
+            }
+        )
+        contentPart = contentPackage.createPart(MATH_PART_NAME)
+        assert(contentPackage.partCount == 1) { "현재 파트 갯수는 1개로 제한 됩니다." }
+    }
+
     override fun close() {
         contentPart.close()
         contentPackage.close()
         editor.renderer.close()
         editor.close()
+        scope.cancel()
     }
 
 }

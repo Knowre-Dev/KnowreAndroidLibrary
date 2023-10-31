@@ -34,7 +34,6 @@ internal class MyScript(
     configFolder: File,
     contentPackageTempFolder: File,
     packageFolder: File,
-    private val mathResourceFolder: File,
     private val inputController: InputController,
     private val editor: Editor,
     private val resourceHandler: ResourceHandler,
@@ -150,18 +149,9 @@ internal class MyScript(
      * @see contentPart
      * @see [ResourceHandler.setGrammar]
      */
-    override fun loadMathGrammar(grammarName: String, byteArray: ByteArray?) {
-        resourceHandler.setGrammar(
-            byteArray?.run {
-                File(mathResourceFolder, "$grammarName.res")
-                    .apply {
-                        createNewFile()
-                        writeBytes(this@run)
-                    }
-            }
-        )
+    override fun loadMathGrammar(grammarName: String, byteArray: ByteArray) {
+        resourceHandler.setConfigToUseCustomGrammar(grammarName, byteArray)
         contentPart = contentPackage.createPart(MATH_PART_NAME)
-        assert(contentPackage.partCount == 1) { "현재 파트 갯수는 1개로 제한 됩니다." }
     }
 
     override fun close() {

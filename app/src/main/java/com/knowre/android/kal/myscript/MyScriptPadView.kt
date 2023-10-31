@@ -43,12 +43,9 @@ internal class MyScriptPadView constructor(
                     binding.redo.isEnabled = canRedo
                     binding.undo.isEnabled = canUndo
                 }
-                Log.d("MY_LOG", "onInterpreted $interpreted, $canRedo, $canUndo")
             }
 
-            override fun onError(message: String) {
-                Log.d("MY_LOG", "onError $message")
-            }
+            override fun onError(message: String) = Unit
         })
 
         binding.digitOnlyGrammar.setOnClickListener {

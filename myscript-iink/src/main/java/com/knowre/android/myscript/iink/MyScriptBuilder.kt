@@ -24,8 +24,11 @@ class MyScriptBuilder {
         folders: FolderProviderApi,
         convertingStandbyJobScope: CoroutineScope
     ) : MyScriptApi {
+        folders.rootFolder.deleteRecursively()
         val engine = Engine.create(certificate)
-        val editorData = EditorBinding(engine, context.provideTypefaces()).openEditor(editorView)
+            .apply { deletePackage(folders.packageFolder) }
+        val editorData = EditorBinding(engine, context.provideTypefaces())
+            .openEditor(editorView)
 
         with(folders) {
             configFolder.mkdirs()
@@ -37,7 +40,6 @@ class MyScriptBuilder {
             configFolder = folders.configFolder.apply { mkdirs() },
             contentPackageTempFolder = folders.contentPackageTempFolder,
             packageFolder = folders.packageFolder,
-            mathResourceFolder = folders.mathResourceFolder,
             editor = editorData.editor!!,
             inputController = editorData.inputController!!,
             resourceHandler = ResourceHandler(context, folders.configFolder, folders.mathResourceFolder),

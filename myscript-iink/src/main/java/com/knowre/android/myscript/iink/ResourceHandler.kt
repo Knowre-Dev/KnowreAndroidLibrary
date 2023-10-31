@@ -40,19 +40,23 @@ internal class ResourceHandler constructor(
             copyAssetFileTo(assetFileName = "resources/math/$DEFAULT_GRAMMAR_NAME", outputFile = File(mathResourceFolder, DEFAULT_GRAMMAR_NAME))
         }
 
-        setGrammar(file = null)
+        setConfigToUseDefaultGrammar()
     }
 
-    /**
-     * Math grammar 를 [file] 로 변경한다. null 일 경우 기본 그래머로 설정한다.
-     */
-    fun setGrammar(file: File?) {
-        file
-            ?.let {
-//                file.copyTo(File(mathResourceFolder, file.name), overwrite = true)
-                configFile.writeText(mathConfigTemplate(file.name))
-            }
-            ?: run { configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME)) }
+    fun setConfigToUseCustomGrammar(grammarName: String, byteArray: ByteArray) {
+        val file = byteArray.run {
+            File(mathResourceFolder, "$grammarName.res")
+                .apply {
+                    createNewFile()
+                    writeBytes(this@run)
+                }
+        }
+
+        file.let { configFile.writeText(mathConfigTemplate(file.name)) }
+    }
+
+    private fun setConfigToUseDefaultGrammar() {
+        configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME))
     }
 
 }

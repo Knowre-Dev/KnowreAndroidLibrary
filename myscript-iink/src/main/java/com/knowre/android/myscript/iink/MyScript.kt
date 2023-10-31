@@ -30,13 +30,13 @@ private const val MATH_PART_NAME = "Math"
 
 
 internal class MyScript(
-    engine: Engine,
     configFolder: File,
     contentPackageTempFolder: File,
     packageFolder: File,
+    private val engine: Engine,
     private val inputController: InputController,
     private val editor: Editor,
-    private val resourceHandler: ResourceHandler,
+    private val grammar: Grammar,
     private val scope: CoroutineScope
 
 ) : MyScriptApi {
@@ -138,19 +138,19 @@ internal class MyScript(
     }
 
     /**
-     * Math grammar 를 [file] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
+     * Math grammar 를 [byteArray] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
      *
-     * [ResourceHandler.setGrammar] 에서 math config 파일을 변경해 그래머를 변경하게 되는데,
+     * [Grammar.load] 에서 math config 파일을 변경해 그래머를 변경하게 되는데,
      * math config 는 [ContentPart] 가 [ContentPackage] 에 할당되기 전에 한번 설정되면,
      * 그 이후에는 새로운 [contentPart] 를 만들어 붙이지 않는 이상 다이나믹하게 변경이 불가능하다.
      * 때문에 config 가 변경될 경우 부득이하게(그래머 변경은 config 변경을 필요로한다.),
      * 현재 [ContentPart] 를 close 하고 새로운 [ContentPart] 를 만들어 [ContentPackage] 에 붙혀야 한다.
      *
      * @see contentPart
-     * @see [ResourceHandler.setGrammar]
+     * @see [Grammar.load]
      */
     override fun loadMathGrammar(grammarName: String, byteArray: ByteArray) {
-        resourceHandler.setConfigToUseCustomGrammar(grammarName, byteArray)
+        grammar.load("$grammarName.res", byteArray)
         contentPart = contentPackage.createPart(MATH_PART_NAME)
     }
 
@@ -159,6 +159,7 @@ internal class MyScript(
         contentPackage.close()
         editor.renderer.close()
         editor.close()
+        engine.close()
         scope.cancel()
     }
 

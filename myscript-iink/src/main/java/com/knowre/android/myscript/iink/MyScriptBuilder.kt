@@ -22,9 +22,11 @@ class MyScriptBuilder {
         certificate: ByteArray,
         editorView: EditorView,
         folders: FolderProviderApi,
+        assetResource: MyScriptAssetResource,
         convertingStandbyJobScope: CoroutineScope
     ) : MyScriptApi {
         folders.rootFolder.deleteRecursively()
+
         val engine = Engine.create(certificate)
             .apply { deletePackage(folders.packageFolder) }
         val editorData = EditorBinding(engine, context.provideTypefaces())
@@ -42,7 +44,11 @@ class MyScriptBuilder {
             packageFolder = folders.packageFolder,
             editor = editorData.editor!!,
             inputController = editorData.inputController!!,
-            resourceHandler = ResourceHandler(context, folders.configFolder, folders.mathResourceFolder),
+            grammar = Grammar(
+                configFolder = folders.configFolder,
+                assetResource = assetResource,
+                mathResourceFolder = folders.mathResourceFolder
+            ),
             scope = convertingStandbyJobScope
         )
             .apply { setTheme(context.resources.theme()) }

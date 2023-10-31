@@ -2,17 +2,20 @@ package com.knowre.android.kal.myscript
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
+import com.knowre.android.myscript.iink.FolderProvider
 import com.knowre.android.myscript.iink.MyScriptApi
+import com.knowre.android.myscript.iink.MyScriptBuilder
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
+import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.knowre.android.myscript.iink.copyAssetFileTo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -25,18 +28,24 @@ internal class MyScriptPadView constructor(
 
     private val binding = ViewMyscriptPadBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private val api: MyScriptApi = binding.myScript.api()
+    private val myscript: MyScriptApi = MyScriptBuilder().build(
+        context,
+        MyCertificate.getBytes(),
+        binding.myScript.editorView,
+        FolderProvider(context),
+        MainScope()
+    )
 
     init {
         binding.redo.isEnabled = false
         binding.undo.isEnabled = false
 
-        binding.convert.setOnClickListener { binding.myScript.api().convert() }
-        binding.deleteAll.setOnClickListener { binding.myScript.api().deleteAll() }
-        binding.myScript.api().setInterpretListener(object : MyScriptInterpretListener {
+        binding.convert.setOnClickListener { myscript.convert() }
+        binding.deleteAll.setOnClickListener { myscript.deleteAll() }
+        myscript.setInterpretListener(object : MyScriptInterpretListener {
             override fun onInterpreted(interpreted: String) {
-                val canRedo = api.canRedo()
-                val canUndo = api.canUndo()
+                val canRedo = myscript.canRedo()
+                val canUndo = myscript.canUndo()
 
                 binding.latex.text = interpreted
                 CoroutineScope(Dispatchers.Main).launch {
@@ -53,45 +62,45 @@ internal class MyScriptPadView constructor(
                 context.copyAssetFileTo(assetFileName = "n_digit_exp.res", outputFile = this)!!
             }
 
-            api.setGrammar(file)
+            myscript.loadMathGrammar(file.name, file.readBytes())
         }
 
         binding.defaultGrammar.setOnClickListener {
-            api.setGrammar(null)
+            //TODO
         }
 
         binding.red.setOnClickListener {
-            api.setPenColor(0xFF0000)
+            myscript.setPenColor(0xFF0000)
         }
 
         binding.blue.setOnClickListener {
-            api.setPenColor(0x0000FF)
+            myscript.setPenColor(0x0000FF)
         }
 
         binding.black.setOnClickListener {
-            api.setPenColor(0x000000)
+            myscript.setPenColor(0x000000)
         }
 
         binding.penSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.eraserSwitch.isChecked = false
-            api.setPointerTool(if (isChecked) ToolType.PEN else ToolType.HAND, ToolFunction.DRAWING)
+            myscript.setPointerTool(if (isChecked) ToolType.PEN else ToolType.HAND, ToolFunction.DRAWING)
         }
 
         binding.eraserSwitch.setOnCheckedChangeListener { _, isChecked ->
             val toolType = if (binding.penSwitch.isChecked) ToolType.PEN else ToolType.HAND
             if (isChecked) {
-                api.setPointerTool(toolType, ToolFunction.ERASING)
+                myscript.setPointerTool(toolType, ToolFunction.ERASING)
             } else {
-                api.setPointerTool(toolType, ToolFunction.DRAWING)
+                myscript.setPointerTool(toolType, ToolFunction.DRAWING)
             }
         }
 
         binding.redo.setOnClickListener {
-            api.redo()
+            myscript.redo()
         }
 
         binding.undo.setOnClickListener {
-            api.undo()
+            myscript.undo()
         }
     }
 

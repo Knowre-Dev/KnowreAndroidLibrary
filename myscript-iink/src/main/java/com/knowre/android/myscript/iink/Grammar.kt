@@ -41,17 +41,19 @@ internal class Grammar constructor(
     }
 
     fun load(grammarName: String, byteArray: ByteArray) {
-        val file = byteArray.run {
-            File(mathResourceFolder, grammarName)
-                .apply {
-                    if (!exists()) {
-                        createNewFile()
-                        writeBytes(this@run)
+        runCatching {
+            byteArray.run {
+                File(mathResourceFolder, grammarName)
+                    .apply {
+                        if (!exists()) {
+                            createNewFile()
+                            writeBytes(this@run)
+                        }
                     }
-                }
+            }
         }
-
-        file.let { configFile.writeText(mathConfigTemplate(file.name)) }
+            .onSuccess { it.let { configFile.writeText(mathConfigTemplate(it.name)) } }
+            .onFailure { configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME)) }
     }
 
 }

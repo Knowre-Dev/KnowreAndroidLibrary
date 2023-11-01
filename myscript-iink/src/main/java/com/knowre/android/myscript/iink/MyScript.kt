@@ -33,6 +33,7 @@ internal class MyScript(
     configFolder: File,
     contentPackageTempFolder: File,
     packageFolder: File,
+    private val rootFolder: File,
     private val engine: Engine,
     private val inputController: InputController,
     private val editor: Editor,
@@ -82,7 +83,7 @@ internal class MyScript(
                         convert()
                     }
                 },
-                onError = { _, _, _, message -> listener?.onError(message) }
+                onError = { _, _, editorError, message -> listener?.onError(editorError, message) }
             )
 
             part = contentPart
@@ -160,6 +161,7 @@ internal class MyScript(
         editor.renderer.close()
         editor.close()
         engine.close()
+        rootFolder.deleteRecursively()
         scope.cancel()
     }
 

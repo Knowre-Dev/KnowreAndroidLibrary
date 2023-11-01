@@ -42,6 +42,7 @@ class MyScriptBuilder {
             configFolder = folders.configFolder.apply { mkdirs() },
             contentPackageTempFolder = folders.contentPackageTempFolder,
             packageFolder = folders.packageFolder,
+            rootFolder = folders.rootFolder,
             editor = editorData.editor!!,
             inputController = editorData.inputController!!,
             grammar = Grammar(

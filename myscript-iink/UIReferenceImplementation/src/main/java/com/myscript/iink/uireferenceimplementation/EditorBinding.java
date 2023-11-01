@@ -6,14 +6,14 @@ import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.util.DisplayMetrics;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.myscript.iink.Editor;
 import com.myscript.iink.Engine;
 import com.myscript.iink.Renderer;
 
 import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public final class EditorBinding
 {

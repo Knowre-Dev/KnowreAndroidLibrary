@@ -11,6 +11,7 @@ interface MyScriptApi {
     fun getCurrentLatex(): String
     fun canRedo(): Boolean
     fun canUndo(): Boolean
+    fun isIdle(): Boolean
     fun setTheme(theme: String)
     fun setPenColor(@ColorInt color: Int)
     fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction)

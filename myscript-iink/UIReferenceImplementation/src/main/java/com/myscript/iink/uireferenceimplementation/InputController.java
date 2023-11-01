@@ -4,10 +4,14 @@ package com.myscript.iink.uireferenceimplementation;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.view.GestureDetector;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.view.GestureDetectorCompat;
 
 import com.myscript.iink.ContentBlock;
 import com.myscript.iink.Editor;
@@ -19,16 +23,16 @@ import com.myscript.iink.graphics.Point;
 
 import java.util.EnumSet;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.core.view.GestureDetectorCompat;
-
 public class InputController implements View.OnTouchListener, GestureDetector.OnGestureListener
 {
 
   public interface ViewListener
   {
     void showScrollbars();
+  }
+
+  public interface OnTouchListener {
+    void onTouch(View v, MotionEvent e);
   }
 
   public static final int INPUT_MODE_NONE = -1;
@@ -46,6 +50,7 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
   @VisibleForTesting
   public PointerType iinkPointerType;
   private ViewListener _viewListener;
+  private OnTouchListener touchListener;
 
   public InputController(Context context, IRenderTarget renderTarget, Editor editor)
   {
@@ -83,6 +88,10 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
   public final synchronized IInputControllerListener getListener()
   {
     return _listener;
+  }
+
+  public final OnTouchListener setOnTouchListener(OnTouchListener listener) {
+    return this.touchListener = listener;
   }
 
   private boolean handleOnTouchForPointer(MotionEvent event, int actionMask, int pointerIndex)
@@ -177,6 +186,14 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
   @Override
   public boolean onTouch(View v, MotionEvent event)
   {
+    Boolean result = processOnTouch(v, event);
+    if (this.touchListener != null) {
+      this.touchListener.onTouch(v, event);
+    }
+    return result;
+  }
+
+  private boolean processOnTouch(View v, MotionEvent event) {
     if (editor == null)
     {
       return false;
@@ -214,7 +231,7 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
       Log.e("InputController", "bad touch sequence", e);
       return false;
     }
-  }
+}
 
   @Override
   public boolean onDown(MotionEvent event)

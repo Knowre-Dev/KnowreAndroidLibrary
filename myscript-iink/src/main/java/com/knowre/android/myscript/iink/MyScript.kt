@@ -14,20 +14,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
+
 /**
  * force pen 으로 설정해야 pen 이든 touch 이든지 상관없이 drawing 을 할 수 있게 된다. force pen 이라고해서 pen 으로만 drawing 한다라고 생각하면 안된다.
  * force pen 은 drawing 모드 force touch 는 drawing 이 아니라 gesture detecting 모드라고 생각하면 된다.
  * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
  */
 private const val DRAWING = InputController.INPUT_MODE_FORCE_PEN
-
 /**
  * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
  */
 private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
-
 private const val MATH_PART_NAME = "Math"
-
+private const val CONVERT_STANDBY_DELAY: Long = 100
+/**
+ * @see [MathConfiguration.setSessionTime]
+ */
+private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 
 internal class MyScript(
     configFolder: File,
@@ -68,7 +71,7 @@ internal class MyScript(
                 .ofMath()
                 .isMathSolverEnable(false)
                 .isConvertAnimationEnable(true)
-                .setSessionTime(100)
+                .setSessionTime(INTERPRET_SESSION_TIME_MILLIS)
 
             addListener(
                 contentChanged = { editor, _ ->
@@ -79,7 +82,7 @@ internal class MyScript(
 
                     convertStandby?.cancel()
                     convertStandby = scope.launch {
-                        delay(100)
+                        delay(CONVERT_STANDBY_DELAY)
                         convert()
                     }
                 },
@@ -114,6 +117,8 @@ internal class MyScript(
     override fun canRedo(): Boolean = editor.canRedo()
 
     override fun canUndo(): Boolean = editor.canUndo()
+
+    override fun isIdle() = editor.isIdle
 
     override fun setPenColor(color: Int) {
         editor.toolController

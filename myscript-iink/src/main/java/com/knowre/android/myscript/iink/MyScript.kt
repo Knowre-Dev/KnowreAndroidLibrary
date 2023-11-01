@@ -21,12 +21,14 @@ import java.io.File
  * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
  */
 private const val DRAWING = InputController.INPUT_MODE_FORCE_PEN
+
 /**
  * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
  */
 private const val DRAWING_BY_PEN_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
 private const val MATH_PART_NAME = "Math"
 private const val CONVERT_STANDBY_DELAY: Long = 100
+
 /**
  * @see [MathConfiguration.setSessionTime]
  */
@@ -129,11 +131,11 @@ internal class MyScript(
     }
 
     override fun setPenColor(color: Int) {
-            runCatching {
-                editor.toolController
-                    .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
-            }
-                .onFailure { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
+        runCatching {
+            editor.toolController
+                .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
+        }
+            .onFailure { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
     }
 
     override fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction) {

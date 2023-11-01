@@ -129,9 +129,11 @@ internal class MyScript(
     }
 
     override fun setPenColor(color: Int) {
-        editor.toolController
-            .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
-            .runCatching { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
+            runCatching {
+                editor.toolController
+                    .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
+            }
+                .onFailure { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
     }
 
     override fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction) {

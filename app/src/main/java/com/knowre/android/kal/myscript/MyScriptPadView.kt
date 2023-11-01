@@ -7,17 +7,17 @@ import android.widget.FrameLayout
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
 import com.knowre.android.myscript.iink.FolderProvider
 import com.knowre.android.myscript.iink.MyScriptApi
+import com.knowre.android.myscript.iink.MyScriptAssetResource
 import com.knowre.android.myscript.iink.MyScriptBuilder
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
 import com.knowre.android.myscript.iink.certificate.MyCertificate
-import com.knowre.android.myscript.iink.copyAssetFileTo
+import com.knowre.android.myscript.iink.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.io.File
 
 
 internal class MyScriptPadView constructor(
@@ -33,6 +33,7 @@ internal class MyScriptPadView constructor(
         MyCertificate.getBytes(),
         binding.myScript.editorView,
         FolderProvider(context),
+        MyScriptAssetResource(context),
         MainScope()
     )
 
@@ -58,11 +59,7 @@ internal class MyScriptPadView constructor(
         })
 
         binding.digitOnlyGrammar.setOnClickListener {
-            val file = File(context.filesDir, "n_digit_exp.res").apply {
-                context.copyAssetFileTo(assetFileName = "n_digit_exp.res", outputFile = this)!!
-            }
-
-            myscript.loadMathGrammar(file.name, file.readBytes())
+            myscript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
         }
 
         binding.defaultGrammar.setOnClickListener {

@@ -60,6 +60,8 @@ internal class MyScript(
 
     private var lastInterpretedLaTex: String = ""
 
+    private var isAutoConvertEnabled: Boolean = true
+
     init {
         engine.configuration
             .ofGeneral()
@@ -81,9 +83,11 @@ internal class MyScript(
                         .also { listener?.onInterpreted(it) }
 
                     convertStandby?.cancel()
-                    convertStandby = scope.launch {
-                        delay(CONVERT_STANDBY_DELAY)
-                        convert()
+                    if (isAutoConvertEnabled) {
+                        convertStandby = scope.launch {
+                            delay(CONVERT_STANDBY_DELAY)
+                            convert()
+                        }
                     }
                 },
                 onError = { _, _, editorError, message -> listener?.onError(editorError, message) }
@@ -119,6 +123,10 @@ internal class MyScript(
     override fun canUndo(): Boolean = editor.canUndo()
 
     override fun isIdle() = editor.isIdle
+
+    override fun isAutoConvertEnabled(isEnabled: Boolean) {
+        isAutoConvertEnabled = isEnabled
+    }
 
     override fun setPenColor(color: Int) {
         editor.toolController

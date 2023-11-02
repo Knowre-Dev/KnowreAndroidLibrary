@@ -3,10 +3,7 @@ package com.knowre.android.myscript.iink
 import java.io.File
 
 
-/**
- * 이 값은 마이스크립트 내부에서 Math 리소스 컨피그 파일을 찾을 때 고정으로 사용하는 값으로 변경하면 안됨
- */
-const val CONFIG_FILE_NAME = "math.conf"
+const val CONFIG_FILE_NAME = "${MathConfiguration.CONFIG_BUNDLE_NAME_DEFAULT}.conf"
 
 internal class MathResourceConfiger constructor(private val configFolder: File) {
 

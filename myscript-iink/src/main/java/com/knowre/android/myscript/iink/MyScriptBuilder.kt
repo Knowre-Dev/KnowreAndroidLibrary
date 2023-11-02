@@ -53,9 +53,9 @@ class MyScriptBuilder {
             editor = editor,
             inputController = inputController,
             mathGrammar = MathGrammar(
-                configFolder = folders.configFolder,
                 assetResource = assetResource,
-                mathResourceFolder = folders.mathResourceFolder
+                mathResourceFolder = folders.mathResourceFolder,
+                mathResourceConfiger = MathResourceConfiger(folders.configFolder)
             ),
             scope = convertingStandbyJobScope
         )

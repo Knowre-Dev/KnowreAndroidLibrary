@@ -6,29 +6,11 @@ import java.io.File
 
 
 internal class MathGrammar constructor(
-    configFolder: File,
     assetResource: MyScriptAssetResource,
-    private val mathResourceFolder: File
+    private val mathResourceFolder: File,
+    private val mathResourceConfiger: MathResourceConfiger
 
 ) {
-
-    private val configFile = File(configFolder, "math.conf")
-
-    private val mathConfigTemplate = { grammarName: String ->
-        """
-            Bundle-Version: 1.0
-            Bundle-Name: math
-            Configuration-Script:
-             AddResDir ../resources
-    
-            Name: standard
-            Type: Math
-            Configuration-Script:
-             AddResource math/math-ak.res
-             AddResource math/$grammarName
-        """
-            .trimIndent()
-    }
 
     init {
         assetResource.defaultGrammarByte
@@ -52,8 +34,8 @@ internal class MathGrammar constructor(
                     }
             }
         }
-            .onSuccess { it.let { configFile.writeText(mathConfigTemplate(it.name)) } }
-            .onFailure { configFile.writeText(mathConfigTemplate(DEFAULT_GRAMMAR_NAME)) }
+            .onSuccess { it.let { mathResourceConfiger.write(it.name) } }
+            .onFailure { mathResourceConfiger.write(DEFAULT_GRAMMAR_NAME) }
     }
 
 }

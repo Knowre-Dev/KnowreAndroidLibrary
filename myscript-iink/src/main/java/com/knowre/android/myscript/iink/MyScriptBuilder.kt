@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
+import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.uireferenceimplementation.EditorBinding
 import com.myscript.iink.uireferenceimplementation.EditorView
@@ -13,7 +14,10 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
 
-
+/**
+ * @see [MathConfiguration.setSessionTime]
+ */
+private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 
 class MyScriptBuilder {
 
@@ -31,21 +35,24 @@ class MyScriptBuilder {
             .apply { deletePackage(folders.packageFolder) }
         val editorData = EditorBinding(engine, context.provideTypefaces())
             .openEditor(editorView)
+        val editor = editorData.editor!!
+        val inputController = editorData.inputController!!
 
         with(folders) {
             configFolder.mkdirs()
             mathResourceFolder.mkdirs()
         }
 
+        generalConfiguration(engine, folders)
+        mathConfiguration(editorData.editor!!)
+
         return MyScript(
             engine = engine,
-            configFolder = folders.configFolder.apply { mkdirs() },
-            contentPackageTempFolder = folders.contentPackageTempFolder,
             packageFolder = folders.packageFolder,
             rootFolder = folders.rootFolder,
-            editor = editorData.editor!!,
-            inputController = editorData.inputController!!,
-            grammar = Grammar(
+            editor = editor,
+            inputController = inputController,
+            mathGrammar = MathGrammar(
                 configFolder = folders.configFolder,
                 assetResource = assetResource,
                 mathResourceFolder = folders.mathResourceFolder
@@ -70,6 +77,21 @@ class MyScriptBuilder {
             typefaces["SYMBOLA"] = it
         }
         return typefaces
+    }
+
+    private fun generalConfiguration(engine: Engine, folders: FolderProviderApi) {
+        engine.configuration
+            .ofGeneral()
+            .setConfigFilePath(folders.configFolder.path)
+            .setContentPackageTempFolder(folders.contentPackageTempFolder.path)
+    }
+
+    private fun mathConfiguration(editor: Editor) {
+        editor.configuration
+            .ofMath()
+            .isMathSolverEnable(false)
+            .isConvertAnimationEnable(true)
+            .setSessionTime(INTERPRET_SESSION_TIME_MILLIS)
     }
 
 }

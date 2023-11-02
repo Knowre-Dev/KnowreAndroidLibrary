@@ -5,7 +5,7 @@ import com.knowre.android.myscript.iink.MyScriptAssetResource.Companion.MATH_AK_
 import java.io.File
 
 
-internal class Grammar constructor(
+internal class MathGrammar constructor(
     configFolder: File,
     assetResource: MyScriptAssetResource,
     private val mathResourceFolder: File

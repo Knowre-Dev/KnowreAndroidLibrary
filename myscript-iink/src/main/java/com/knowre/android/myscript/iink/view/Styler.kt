@@ -9,7 +9,7 @@ import java.util.Locale
 internal fun style(
     color: String,
     thickness: Float = 0.625F
-) = String.format(Locale.US, "" +
+) = String.format(Locale.US,
     "color: $color;" +
     "-myscript-pen-width: %.2f",
     thickness

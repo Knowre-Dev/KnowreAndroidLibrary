@@ -17,6 +17,6 @@ interface MyScriptApi {
     fun setPenColor(@ColorInt color: Int)
     fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction)
     fun setInterpretListener(listener: MyScriptInterpretListener)
-    fun loadMathGrammar(grammarName: String, grammar: ByteArray)
+    fun loadMathGrammar(grammarName: String, byteArray: ByteArray)
     fun close()
 }

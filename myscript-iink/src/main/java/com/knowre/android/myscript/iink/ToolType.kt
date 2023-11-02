@@ -4,16 +4,23 @@ import com.myscript.iink.PointerTool
 import com.myscript.iink.PointerType
 
 
+/**
+ * 화면에 Touch 가 이루어지는 tool 이 무엇인지 나타낸다.
+ */
 enum class ToolType {
     PEN, HAND
 }
 
+/**
+ * [ToolType] 으로 touch 가 이루어졌을 경우 해당 touch 영역에 어떠한 동작을 할지를 나타낸다.
+ */
 enum class ToolFunction {
     DRAWING, ERASING
 }
 
 /**
- * [PointerType] 은 화면에 터치하기 위해 사용되는 도구가 무엇인지를 나타낸다. 때문에 [ToolType] 그대로 [PointerType] 으로 변환하면 된다.
+ * 마이스크립트의 [PointerType] 은 화면에 터치하기 위해 사용되는 도구가 무엇인지를 나타낸다.
+ * 때문에 [ToolType] 그대로 [PointerType] 으로 변환하면 된다.
  */
 internal val ToolType.toPointerType: PointerType
     get() = when (this) {
@@ -22,8 +29,8 @@ internal val ToolType.toPointerType: PointerType
     }
 
 /**
- * [PointerTool] 이란 [PointerType] 로 그려진 터치 정보가 어떤한 목적으로 사용될지를 나타낼지를 의미한다.
- * [ToolType] 으로 그려진 정보가 [ToolFunction] 의 목적에 맞게 사용되도록 아래와 같은 정보를 바탕으로 적절한 [PointerTool] 로 변환한다.
+ * 마이스크립트의 [PointerTool] 이란 [PointerType] 로 그려진 터치 정보가 어떤한 목적으로 사용될지를 나타낼지를 의미한다.
+ * [ToolType] 으로 그려진 정보가 [ToolFunction] 에 맞게 사용되도록 아래와 같은 정보를 바탕으로 적절한 [PointerTool] 로 변환한다.
  *
  * [PointerTool.PEN] : 해당 터치 정보를 Drawing Stroke 으로 표시함.
  *

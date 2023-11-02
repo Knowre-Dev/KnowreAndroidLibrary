@@ -27,7 +27,8 @@ internal class MathResourceConfiger constructor(private val configFolder: File) 
     }
 
     val write = { grammarName: String ->
-        File(configFolder, CONFIG_FILE_NAME).writeText(template(grammarName))
+        File(configFolder, CONFIG_FILE_NAME)
+            .writeText(template(grammarName))
     }
 
 }

@@ -20,12 +20,12 @@ enum class ToolFunction {
 
 /**
  * 마이스크립트의 [PointerType] 은 화면에 터치하기 위해 사용되는 도구가 무엇인지를 나타낸다.
- * 때문에 [ToolType] 그대로 [PointerType] 으로 변환하면 된다.
+ * 하지만 무슨 이유에서 인지 [PointerType.PEN] 으로 다 리턴해야. 드로윙이든 지우개든 다 잘 작동한다;
  */
 internal val ToolType.toPointerType: PointerType
     get() = when (this) {
         ToolType.PEN -> PointerType.PEN
-        ToolType.HAND -> PointerType.TOUCH
+        ToolType.HAND -> PointerType.PEN
     }
 
 /**

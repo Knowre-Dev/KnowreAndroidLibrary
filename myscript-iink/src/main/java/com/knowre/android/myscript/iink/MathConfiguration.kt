@@ -22,7 +22,7 @@ internal class MathConfiguration constructor(private val configuration: Configur
     }
 
     var mathConfigurationName by Delegates.observable(CONFIG_NAME_DEFAULT) { _, _, new ->
-        configuration.setString("math.configuration.bundle", CONFIG_NAME_DEFAULT)
+        configuration.setString("math.configuration.name", new)
     }
 
     /**

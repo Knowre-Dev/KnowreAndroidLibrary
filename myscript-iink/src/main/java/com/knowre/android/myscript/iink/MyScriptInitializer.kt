@@ -20,17 +20,20 @@ import java.nio.charset.StandardCharsets
 private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 
 class MyScriptInitializer(
-    val context: Context,
+    private val context: Context,
     certificate: ByteArray,
     editorView: EditorView,
-    val folders: FolderProviderApi,
-    val assetResource: MyScriptAssetResource,
-    val convertingStandbyJobScope: CoroutineScope
+    private val folders: FolderProviderApi,
+    private val assetResource: MyScriptAssetResource,
+    private val convertingStandbyJobScope: CoroutineScope
 
 ) {
 
     private val engine = Engine.create(certificate)
-        .apply { deletePackage(folders.packageFolder) }
+        .apply {
+            //TODO package 가 사용중이면 에러난다.
+            deletePackage(folders.packageFolder)
+        }
 
     private val editorData = EditorBinding(engine, context.provideTypefaces())
         .openEditor(editorView)
@@ -45,17 +48,15 @@ class MyScriptInitializer(
         mathResourceFolder = folders.mathResourceFolder,
         mathResourceConfiger = mathResourceConfiger
     )
-        .also { it.load(MyScriptAssetResource.DEFAULT_GRAMMAR_NAME, assetResource.defaultGrammarByte) }
 
-    fun deleteRootFolder(): MyScriptInitializer {
+    init {
         folders.rootFolder.deleteRecursively()
-        return this
-    }
-
-    fun createNecessaryFolders(): MyScriptInitializer {
         folders.configFolder.mkdirs()
         folders.mathResourceFolder.mkdirs()
-        return this
+        /**
+         * 그래머를 로드 해줘야 math.conf 파일이 생성되기 때문에 초기화 단계에서 선제적으로 이 작업을 수행한다.
+         */
+        mathGrammar.load(MyScriptAssetResource.DEFAULT_GRAMMAR_NAME, assetResource.defaultGrammarByte)
     }
 
     fun setGeneralConfiguration(
@@ -77,6 +78,8 @@ class MyScriptInitializer(
     ): MyScriptInitializer {
         editor.configuration
             .ofMath {
+                this.mathConfigurationBundle = MathConfiguration.CONFIG_BUNDLE_NAME_DEFAULT
+                this.mathConfigurationName = MathConfiguration.CONFIG_NAME_DEFAULT
                 this.isMathSolverEnabled = isMathSolverEnabled
                 this.isConvertAnimationEnabled = isConvertAnimationEnabled
                 this.sessionTimeMillis = sessionTimeMillis

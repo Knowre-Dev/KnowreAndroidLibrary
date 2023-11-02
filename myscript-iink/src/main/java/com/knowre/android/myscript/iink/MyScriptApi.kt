@@ -12,11 +12,11 @@ interface MyScriptApi {
     var isAutoConvertEnabled: Boolean
     var theme: String
     var tool: Tool
+    var penColor: Int
     val currentLatex: String
     val isIdle: Boolean
     val canUndo: Boolean
     val canRedo: Boolean
-    val penColor: Int
     fun undo()
     fun redo()
     fun deleteAll()

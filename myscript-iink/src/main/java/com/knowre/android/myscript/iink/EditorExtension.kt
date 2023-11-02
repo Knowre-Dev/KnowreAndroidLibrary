@@ -1,5 +1,6 @@
 package com.knowre.android.myscript.iink
 
+import android.util.Log
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
@@ -38,6 +39,7 @@ internal inline fun Editor.addListener(
         }
 
         override fun onError(editor: Editor, blockId: String, error: EditorError, message: String) {
+            Log.d("MY_SCRIPT_ERROR", "$error with message $message")
             onError(editor, blockId, error, message)
         }
 

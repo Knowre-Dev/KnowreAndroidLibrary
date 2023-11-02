@@ -1,22 +1,26 @@
 package com.knowre.android.myscript.iink
 
-import androidx.annotation.ColorInt
-
 
 interface MyScriptApi {
+    data class Tool(val toolType: ToolType, val toolFunction: ToolFunction) {
+        companion object {
+            val DEFAULT = Tool(ToolType.HAND, ToolFunction.DRAWING)
+        }
+    }
+
+    var listener: MyScriptInterpretListener?
+    var isAutoConvertEnabled: Boolean
+    var theme: String
+    var tool: Tool
+    val currentLatex: String
+    val isIdle: Boolean
+    val canUndo: Boolean
+    val canRedo: Boolean
+    val penColor: Int
     fun undo()
     fun redo()
     fun deleteAll()
     fun convert()
-    fun getCurrentLatex(): String
-    fun canRedo(): Boolean
-    fun canUndo(): Boolean
-    fun isIdle(): Boolean
-    fun isAutoConvertEnabled(isEnabled: Boolean)
-    fun setTheme(theme: String)
-    fun setPenColor(@ColorInt color: Int)
-    fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction)
-    fun setInterpretListener(listener: MyScriptInterpretListener)
     fun loadMathGrammar(grammarName: String, byteArray: ByteArray)
     fun close()
 }

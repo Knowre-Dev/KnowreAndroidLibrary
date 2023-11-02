@@ -13,6 +13,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.properties.Delegates
 
 
 /**
@@ -20,11 +21,11 @@ import java.io.File
  * force pen 은 drawing/erasing 모드 force touch 는 drawing 이 아니라 gesture detecting 모드라고 생각하면 된다.
  * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
  */
-private const val DRAWING_OR_ERASING_ONLY = InputController.INPUT_MODE_FORCE_PEN
+private const val DRAWING_OR_ERASING_ONLY_ = InputController.INPUT_MODE_FORCE_PEN
 
 /**
  * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
- * (참고 : 현재 앱에서는 이 상태를 사용하지 않지만. 기능 자체는 넣어두었다.)
+ * (참고 : 현재 앱에서는 이 상태를 사용하지 않지만. 기능 자체는 넣어 두었다.)
  */
 private const val DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
 
@@ -43,7 +44,48 @@ internal class MyScript(
 
 ) : MyScriptApi {
 
-    private var listener: MyScriptInterpretListener? = null
+    override var listener: MyScriptInterpretListener? = null
+
+    override var isAutoConvertEnabled: Boolean = true
+
+    override var theme: String by Delegates.observable("") { _, _, new ->
+        editor.theme = new
+    }
+
+    /**
+     * 참고 : 현재 앱에서는 [ToolType.HAND], [ToolFunction.DRAWING] 만 사용 중이다.
+     */
+    override var tool: MyScriptApi.Tool by Delegates.observable(MyScriptApi.Tool.DEFAULT) { _, _, new ->
+        when (tool.toolType) {
+            ToolType.PEN -> inputController.inputMode = DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND
+            ToolType.HAND -> inputController.inputMode = DRAWING_OR_ERASING_ONLY_
+        }
+
+        editor.toolController.setToolForType(tool.toolType.toPointerType, tool.toolFunction.toPointerTool)
+    }
+
+    override val currentLatex: String
+        get() = editor.latex()
+
+    override val isIdle: Boolean
+        get() = editor.isIdle
+
+    override val canUndo: Boolean
+        get() = editor.canUndo()
+
+    override val canRedo: Boolean
+        get() = editor.canRedo()
+
+    /**
+     * 참고 : 현재 앱에서는 펜 색 변경을 사용하고 있지 않다.
+     */
+    override val penColor: Int by Delegates.observable(0) { _, _, new ->
+        runCatching {
+            editor.toolController
+                .setToolStyle(PointerTool.PEN, style(colorValue((new.opaque.iinkColor))))
+        }
+            .onFailure { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
+    }
 
     private var contentPackage: ContentPackage = engine.createPackage(packageFolder)
     private var contentPart: ContentPart = contentPackage.createPart(MATH_PART_NAME)
@@ -54,45 +96,31 @@ internal class MyScript(
             field = value
         }
 
-    private var convertStandby: Job? = null
-
     private var lastInterpretedLaTex: String = ""
 
-    private var isAutoConvertEnabled: Boolean = true
+    private var convertStandby: Job? = null
+
+    private val shouldAutoConvert
+        get() = isAutoConvertEnabled && !shouldPreventAutoConvertTemporarily
 
     /**
      * 현재 마이스크립트는 touch up 하면 자동으로 컨버팅 해주는데, 이는 undo, redo 시에도 마찬가지이다.
-     * undo redo 시에 자동으로 컨버팅하면, 빠르게 undo redo 를 실행할 시 제대로 실행되지 않는 경우가 발생한다.
-     * 때문에, 이 변수로 undo redo 로 인한 [IEditorListener.contentChanged] 발생 시 컨버팅을 하지 않도록 컨트롤 한다.
+     * undo redo 시에 자동으로 컨버팅하면, 빠르게 undo redo 를 실행할 시 제대로 동작하지 않는 이슈가 발생한다.
+     * 때문에, 이 변수로 undo redo 로 인한 [IEditorListener.contentChanged] 발생 시 자동 컨버팅을 하지 않도록 조절 한다.
      */
     private var shouldPreventAutoConvertTemporarily: Boolean = false
-    private val shouldAutoConvert
-        get() = isAutoConvertEnabled && !shouldPreventAutoConvertTemporarily
 
     init {
         with(editor) {
             addListener(
-                contentChanged = { editor, _ ->
-                    editor.latex()
-                        .also { if (lastInterpretedLaTex == it) return@addListener }
-                        .also { lastInterpretedLaTex = it }
-                        .also { listener?.onInterpreted(it) }
-
-                    convertStandby?.cancel()
-                    if (shouldAutoConvert) {
-                        convertStandby = scope.launch {
-                            delay(CONVERT_STANDBY_DELAY)
-                            convert()
-                        }
-                    }
-                },
-                onError = { _, _, editorError, message -> listener?.onError(editorError, message) }
+                contentChanged = contentChangedListener(),
+                onError = onEditorError()
             )
             part = contentPart
         }
 
         with(inputController) {
-            inputMode = DRAWING_OR_ERASING_ONLY
+            inputMode = DRAWING_OR_ERASING_ONLY_
             setOnTouchListener { _, _ ->
                 shouldPreventAutoConvertTemporarily = false
             }
@@ -116,49 +144,6 @@ internal class MyScript(
     override fun convert() {
         convertStandby?.cancel()
         editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
-    }
-
-    override fun getCurrentLatex() = editor.latex()
-
-    override fun canRedo(): Boolean = editor.canRedo()
-
-    override fun canUndo(): Boolean = editor.canUndo()
-
-    override fun isIdle() = editor.isIdle
-
-    override fun isAutoConvertEnabled(isEnabled: Boolean) {
-        isAutoConvertEnabled = isEnabled
-    }
-
-    /**
-     * 참고 : 현재 앱에서는 펜 색 변경을 사용하고 있지 않다.
-     */
-    override fun setPenColor(color: Int) {
-        runCatching {
-            editor.toolController
-                .setToolStyle(PointerTool.PEN, style(colorValue((color.opaque.iinkColor))))
-        }
-            .onFailure { /** if failure, a pointer event sequence is in progress, not allowed to re-configure or change tool, currently do nothing */ }
-    }
-
-    /**
-     * 참고 : 현재 앱에서는 [ToolType.HAND], [ToolFunction.DRAWING] 만 사용 중이다.
-     */
-    override fun setPointerTool(toolType: ToolType, toolFunction: ToolFunction) {
-        when (toolType) {
-            ToolType.PEN -> inputController.inputMode = DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND
-            ToolType.HAND -> inputController.inputMode = DRAWING_OR_ERASING_ONLY
-        }
-
-        editor.toolController.setToolForType(toolType.toPointerType, toolFunction.toPointerTool)
-    }
-
-    override fun setTheme(theme: String) {
-        editor.theme = theme
-    }
-
-    override fun setInterpretListener(listener: MyScriptInterpretListener) {
-        this.listener = listener
     }
 
     /**
@@ -190,5 +175,24 @@ internal class MyScript(
         rootFolder.deleteRecursively()
         scope.cancel()
     }
+
+    private fun contentChangedListener(): ContentChanged = { editor, _ ->
+        val latex = editor.latex()
+
+        if (lastInterpretedLaTex != latex) {
+            lastInterpretedLaTex = latex
+            listener?.onInterpreted(latex)
+
+            convertStandby?.cancel()
+            if (shouldAutoConvert) {
+                convertStandby = scope.launch {
+                    delay(CONVERT_STANDBY_DELAY)
+                    convert()
+                }
+            }
+        }
+    }
+
+    private fun onEditorError(): OnError = { editor, blockId, error, message -> listener?.onError(editor, blockId, error, message) }
 
 }

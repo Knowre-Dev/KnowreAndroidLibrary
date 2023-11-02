@@ -1,5 +1,6 @@
 package com.knowre.android.myscript.iink
 
+import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 import com.myscript.iink.IEditorListener
 
@@ -10,5 +11,5 @@ interface MyScriptInterpretListener {
      * 참고 : 해당 함수의 쓰레드는 Main 쓰레드가 아님.
      */
     fun onInterpreted(interpreted: String)
-    fun onError(editorError: EditorError, message: String)
+    fun onError(editor: Editor, blockId: String, error: EditorError, message: String)
 }

@@ -1,6 +1,5 @@
 package com.knowre.android.myscript.iink
 
-import com.knowre.android.myscript.iink.view.style
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor

@@ -1,4 +1,4 @@
-package com.knowre.android.myscript.iink.view
+package com.knowre.android.myscript.iink
 
 import java.util.Locale
 

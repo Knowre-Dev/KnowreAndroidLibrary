@@ -24,7 +24,6 @@ internal class MathResourceConfiger constructor(private val configFolder: File) 
              AddResource math/$grammarName
         """
             .trimIndent()
-
     }
 
     val write = { grammarName: String ->

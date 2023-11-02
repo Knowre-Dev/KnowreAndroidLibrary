@@ -3,6 +3,7 @@ package com.knowre.android.myscript.iink
 import com.myscript.iink.Configuration
 import com.myscript.iink.Editor
 import com.myscript.iink.IEditorListener
+import kotlin.properties.Delegates
 
 
 /**
@@ -16,14 +17,12 @@ internal class MathConfiguration constructor(private val configuration: Configur
         const val CONFIG_NAME_DEFAULT = "standard"
     }
 
-    fun setMathConfigurationBundle(bundleName: String = CONFIG_BUNDLE_NAME_DEFAULT): MathConfiguration {
-        configuration.setString("math.configuration.bundle", bundleName)
-        return this
+    var mathConfigurationBundle by Delegates.observable(CONFIG_BUNDLE_NAME_DEFAULT) { _, _, new ->
+        configuration.setString("math.configuration.bundle", new)
     }
 
-    fun setMathConfigurationName(configName: String = CONFIG_NAME_DEFAULT): MathConfiguration {
-        configuration.setString("math.configuration.name", configName)
-        return this
+    var mathConfigurationName by Delegates.observable(CONFIG_NAME_DEFAULT) { _, _, new ->
+        configuration.setString("math.configuration.bundle", CONFIG_NAME_DEFAULT)
     }
 
     /**
@@ -32,22 +31,19 @@ internal class MathConfiguration constructor(private val configuration: Configur
      * (다만 왜 math.session-time 는 옵션 적용이되지만 doc 에는 없는지는 모르겠다. doc 를 업데이트 안한 건지.)
      * 이를, 적당히 줄여야 touch up 후에 바로 인식이 된다. 만약 이 값을 기본 값을 쓰게되면 이 interval 시간동안 [Editor.export_] 를 통해 latex 값을 뽑아 올 수 없다.
      */
-    fun setSessionTime(millis: Long): MathConfiguration {
-        configuration.setNumber("math.session-time", millis)
-        return this
+    var sessionTimeMillis by Delegates.observable(100L) { _, _, new ->
+        configuration.setNumber("math.session-time", new)
     }
 
     /**
      * true 로 설정하면, [MyScript.convert] 실행 시 변환된 수학 공식에 정답도 같이 표시된다.
      */
-    fun isMathSolverEnable(isEnable: Boolean): MathConfiguration {
-        configuration.setBoolean("math.solver.enable", isEnable)
-        return this
+    var isMathSolverEnabled by Delegates.observable(false) { _, _, new ->
+        configuration.setBoolean("math.solver.enable", new)
     }
 
-    fun isConvertAnimationEnable(isEnable: Boolean): MathConfiguration {
-        configuration.setBoolean("math.convert.animate", isEnable)
-        return this
+    var isConvertAnimationEnabled by Delegates.observable(true) { _, _, new ->
+        configuration.setBoolean("math.convert.animate", new)
     }
 
 }

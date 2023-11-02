@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets
 
 
 /**
- * @see [MathConfiguration.setSessionTime]
+ * @see [MathConfiguration.sessionTimeMillis]
  */
 private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 
@@ -39,9 +39,11 @@ class MyScriptBuilder(
 
     private val inputController = editorData.inputController!!
 
+    private val mathResourceConfiger = MathResourceConfiger(folders.configFolder)
+
     private val mathGrammar = MathGrammar(
         mathResourceFolder = folders.mathResourceFolder,
-        mathResourceConfiger = MathResourceConfiger(folders.configFolder)
+        mathResourceConfiger = mathResourceConfiger
     )
         .also { it.load(MyScriptAssetResource.DEFAULT_GRAMMAR_NAME, assetResource.defaultGrammarByte) }
 
@@ -71,20 +73,29 @@ fun MyScriptBuilder.createNecessaryFolders(): MyScriptBuilder {
     return this
 }
 
-fun MyScriptBuilder.makeGeneralConfiguration(): MyScriptBuilder {
+fun MyScriptBuilder.setGeneralConfiguration(
+    configPath: String = folders.configFolder.path,
+    contentPackageTempFolder: String = folders.contentPackageTempFolder.path
+): MyScriptBuilder {
     engine.configuration
-        .ofGeneral()
-        .setConfigFilePath(folders.configFolder.path)
-        .setContentPackageTempFolder(folders.contentPackageTempFolder.path)
+        .ofGeneral {
+            this.configPath = configPath
+            this.contentPackageTempFolder = contentPackageTempFolder
+        }
     return this
 }
 
-fun MyScriptBuilder.makeMathConfiguration(): MyScriptBuilder {
+fun MyScriptBuilder.setMathConfiguration(
+    isMathSolverEnabled: Boolean = false,
+    isConvertAnimationEnabled: Boolean = true,
+    sessionTimeMilis: Long = INTERPRET_SESSION_TIME_MILLIS
+): MyScriptBuilder {
     editor.configuration
-        .ofMath()
-        .isMathSolverEnable(false)
-        .isConvertAnimationEnable(true)
-        .setSessionTime(INTERPRET_SESSION_TIME_MILLIS)
+        .ofMath {
+            this.isMathSolverEnabled = isMathSolverEnabled
+            this.isConvertAnimationEnabled = isConvertAnimationEnabled
+            this.sessionTimeMillis = sessionTimeMilis
+        }
     return this
 }
 

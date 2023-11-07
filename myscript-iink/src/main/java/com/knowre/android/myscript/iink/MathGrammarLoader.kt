@@ -4,7 +4,7 @@ import com.knowre.android.myscript.iink.MyScriptAssetResource.Companion.DEFAULT_
 import java.io.File
 
 
-internal class MathGrammar constructor(
+internal class MathGrammarLoader constructor(
     private val mathResourceFolder: File,
     private val mathResourceConfiger: MathResourceConfiger
 
@@ -14,12 +14,7 @@ internal class MathGrammar constructor(
         runCatching {
             byteArray.run {
                 File(mathResourceFolder, grammarName)
-                    .apply {
-                        if (!exists()) {
-                            createNewFile()
-                            writeBytes(this@run)
-                        }
-                    }
+                    .apply { writeBytes(this@run) }
             }
         }
             .onSuccess { it.let { mathResourceConfiger.write(it.name) } }

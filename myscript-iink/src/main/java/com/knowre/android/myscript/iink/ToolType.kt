@@ -13,6 +13,7 @@ enum class ToolType {
 
 /**
  * [ToolType] 으로 touch 가 이루어졌을 경우 해당 touch 영역에 어떠한 동작을 할지를 나타낸다.
+ * 참고) 현재 앱에서 [ERASING] 은 사용하고 있지 않는다.
  */
 enum class ToolFunction {
     DRAWING, ERASING
@@ -20,7 +21,7 @@ enum class ToolFunction {
 
 /**
  * 마이스크립트의 [PointerType] 은 화면에 터치하기 위해 사용되는 도구가 무엇인지를 나타낸다.
- * 하지만 무슨 이유에서 인지 [PointerType.PEN] 으로 다 리턴해야. 드로윙이든 지우개든 다 잘 작동한다;
+ * 하지만 무슨 이유에서인지 [PointerType.PEN] 으로 다 리턴해야. 드로윙이든 지우개든 다 잘 작동한다;
  */
 internal val ToolType.toPointerType: PointerType
     get() = when (this) {
@@ -34,7 +35,7 @@ internal val ToolType.toPointerType: PointerType
  *
  * [PointerTool.PEN] : 해당 터치 정보를 Drawing Stroke 으로 표시함.
  *
- * [PointerTool.HAND] : 해당 터치 정보를 Gesture Detecting(한 칸 띄우기, 도형 정보 선 잇기 등) 에 사용함. 현재 우리 앱에서는 사용하지 않을 내용.
+ * [PointerTool.HAND] : 해당 터치 정보를 Gesture Detecting(한 칸 띄우기, 도형 정보 선 잇기 등) 에 사용함.
  *
  * [PointerTool.ERASER] : 해당 터치 정보를 content 를 지우는데 사용함.
  *

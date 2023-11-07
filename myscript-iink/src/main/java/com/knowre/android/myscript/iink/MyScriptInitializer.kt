@@ -20,9 +20,9 @@ import java.nio.charset.StandardCharsets
 private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 
 class MyScriptInitializer(
-    private val context: Context,
     certificate: ByteArray,
     editorView: EditorView,
+    private val context: Context,
     private val folders: FolderProviderApi,
     private val assetResource: MyScriptAssetResource,
     private val convertingStandbyJobScope: CoroutineScope
@@ -30,10 +30,7 @@ class MyScriptInitializer(
 ) {
 
     private val engine = Engine.create(certificate)
-        .apply {
-            //TODO package 가 사용중이면 에러난다.
-            deletePackage(folders.packageFolder)
-        }
+        .apply { deleteUsedPackage(folders.packageFolder) }
 
     private val editorData = EditorBinding(engine, context.provideTypefaces())
         .openEditor(editorView)
@@ -44,7 +41,7 @@ class MyScriptInitializer(
 
     private val mathResourceConfiger = MathResourceConfiger(folders.configFolder)
 
-    private val mathGrammar = MathGrammar(
+    private val mathGrammarLoader = MathGrammarLoader(
         mathResourceFolder = folders.mathResourceFolder,
         mathResourceConfiger = mathResourceConfiger
     )
@@ -56,7 +53,7 @@ class MyScriptInitializer(
         /**
          * 그래머를 로드 해줘야 math.conf 파일이 생성되기 때문에 초기화 단계에서 선제적으로 이 작업을 수행한다.
          */
-        mathGrammar.load(MyScriptAssetResource.DEFAULT_GRAMMAR_NAME, assetResource.defaultGrammarByte)
+        mathGrammarLoader.load(MyScriptAssetResource.DEFAULT_GRAMMAR_NAME, assetResource.defaultGrammarByte)
     }
 
     fun setGeneralConfiguration(
@@ -104,7 +101,7 @@ class MyScriptInitializer(
             rootFolder = folders.rootFolder,
             editor = editor,
             inputController = inputController,
-            mathGrammar = mathGrammar,
+            mathGrammarLoader = mathGrammarLoader,
             scope = convertingStandbyJobScope
         )
             .apply { theme = context.resources.theme() }
@@ -125,6 +122,17 @@ class MyScriptInitializer(
             typefaces["SYMBOLA"] = it
         }
         return typefaces
+    }
+
+    private fun Engine.deleteUsedPackage(packageFolder: File) {
+        runCatching {
+            with(packageFolder) {
+                openPackage(this)
+                    .takeIf { !it.isClosed }
+                    ?.close()
+                deletePackage(this)
+            }
+        }
     }
 
 }

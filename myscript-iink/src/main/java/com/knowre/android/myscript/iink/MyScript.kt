@@ -139,6 +139,7 @@ internal class MyScript(
     }
 
     override fun deleteAll() {
+        lastInterpretedLaTex = ""
         editor.clear()
     }
 

@@ -1,6 +1,7 @@
 package com.knowre.android.kal.myscript
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +15,6 @@ import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
 import com.knowre.android.myscript.iink.certificate.MyCertificate
-import com.knowre.android.myscript.iink.toByteArray
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 import kotlinx.coroutines.MainScope
@@ -33,12 +33,12 @@ internal class MyScriptPadView constructor(
     private val mainScope = MainScope()
 
     private val myscript: MyScriptApi = MyScriptInitializer(
-        context,
-        MyCertificate.getBytes(),
-        binding.myScript.editorView,
-        FolderProvider(context),
-        MyScriptAssetResource(context),
-        mainScope
+        certificate = MyCertificate.getBytes(),
+        editorView = binding.myScript.editorView,
+        context = context,
+        folders = FolderProvider(context),
+        assetResource = MyScriptAssetResource(context),
+        convertingStandbyJobScope = mainScope
     )
         .setGeneralConfiguration()
         .setMathConfiguration()
@@ -126,5 +126,7 @@ internal class MyScriptPadView constructor(
         super.onDetachedFromWindow()
         mainScope.cancel()
     }
+
+    private fun AssetManager.toByteArray(fileName: String) = open(fileName).use { it.readBytes() }
 
 }

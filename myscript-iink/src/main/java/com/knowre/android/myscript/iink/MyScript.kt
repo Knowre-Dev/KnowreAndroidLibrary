@@ -34,7 +34,7 @@ private const val DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND = InputControlle
  */
 private const val MATH_PART_NAME = "Math"
 
-private const val CONVERT_STANDBY_DELAY: Long = 100
+private const val CONVERT_STANDBY_DELAY: Long = 200
 
 internal class MyScript(
     packageFolder: File,

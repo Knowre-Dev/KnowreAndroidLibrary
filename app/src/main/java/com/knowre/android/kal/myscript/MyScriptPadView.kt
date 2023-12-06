@@ -32,39 +32,42 @@ internal class MyScriptPadView constructor(
 
     private val mainScope = MainScope()
 
-    private val myscript: MyScriptApi = MyScriptInitializer(
-        certificate = MyCertificate.getBytes(),
-        editorView = binding.myScript.editorView,
-        context = context,
-        folders = FolderProvider(context),
-        assetResource = MyScriptAssetResource(context),
-        convertingStandbyJobScope = mainScope
-    )
-        .setGeneralConfiguration()
-        .setMathConfiguration()
-        .writeAssetResourcesToMathResourceFolder()
-        .initialize()
+    private lateinit var myscript: MyScriptApi
 
     init {
+        MyScriptInitializer(
+            certificate = MyCertificate.getBytes(),
+            editorView = binding.myScript.editorView,
+            context = context,
+            folders = FolderProvider(context),
+            assetResource = MyScriptAssetResource(context),
+            scope = mainScope
+        )
+            .setGeneralConfiguration()
+            .setMathConfiguration()
+            .initialize {
+                myscript = it.apply {
+                    listener = object : MyScriptInterpretListener {
+                        override fun onInterpreted(interpreted: String) {
+                            binding.latex.text = interpreted
+                            mainScope.launch {
+                                binding.redo.isEnabled = myscript.canRedo
+                                binding.undo.isEnabled = myscript.canUndo
+                            }
+                        }
+
+                        override fun onError(editor: Editor, blockId: String, error: EditorError, message: String) {
+                            Log.d("MY_SCRIPT_ERROR", "$error with message $message")
+                        }
+                    }
+                }
+            }
+
         binding.redo.isEnabled = false
         binding.undo.isEnabled = false
 
         binding.convert.setOnClickListener { myscript.convert() }
-        binding.deleteAll.setOnClickListener { myscript.deleteAll() }
-        myscript.listener = object : MyScriptInterpretListener {
-            override fun onInterpreted(interpreted: String) {
-                binding.latex.text = interpreted
-                mainScope.launch {
-                    binding.redo.isEnabled = myscript.canRedo
-                    binding.undo.isEnabled = myscript.canUndo
-                }
-            }
-
-            override fun onError(editor: Editor, blockId: String, error: EditorError, message: String) {
-                Log.d("MY_SCRIPT_ERROR", "$error with message $message")
-            }
-        }
-
+        binding.deleteAll.setOnClickListener { myscript.eraseAll() }
         binding.digitOnlyGrammar.setOnClickListener {
             myscript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
         }

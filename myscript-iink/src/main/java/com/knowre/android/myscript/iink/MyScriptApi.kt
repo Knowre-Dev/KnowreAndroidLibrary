@@ -19,7 +19,7 @@ interface MyScriptApi {
     val canRedo: Boolean
     fun undo()
     fun redo()
-    fun deleteAll()
+    fun eraseAll(keepRedoUndoStack: Boolean = false)
     fun convert()
     fun loadMathGrammar(grammarName: String, byteArray: ByteArray)
     fun close()

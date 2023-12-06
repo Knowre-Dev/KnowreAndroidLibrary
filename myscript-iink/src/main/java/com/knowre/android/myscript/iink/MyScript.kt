@@ -138,8 +138,18 @@ internal class MyScript(
         editor.redo()
     }
 
-    override fun deleteAll() {
-        editor.clear()
+    /**
+     * 그려진 스트록을 모두 지운다.
+     *
+     * [keepRedoUndoStack] 가 false 일 경우, 기본적으로 [Editor] 에 redo, undo stack 을 비우는 함수는 없어서 [contentPart] 자체를 교체한다.
+     */
+    override fun eraseAll(keepRedoUndoStack: Boolean) {
+        if (keepRedoUndoStack) {
+            editor.clear()
+        } else {
+            contentPart = contentPackage.createPart(MATH_PART_NAME)
+            listener?.onInterpreted("")
+        }
     }
 
     override fun convert() {

@@ -97,6 +97,7 @@ internal class MyScript(
             contentPackage.removePart(field)
             field.close()
             editor.part = value
+            lastInterpretedLaTex = ""
             field = value
         }
 

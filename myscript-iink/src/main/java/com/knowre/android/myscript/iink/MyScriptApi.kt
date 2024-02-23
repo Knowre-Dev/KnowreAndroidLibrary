@@ -1,5 +1,7 @@
 package com.knowre.android.myscript.iink
 
+import com.knowre.android.myscript.iink.jiix.Jiix
+
 
 interface MyScriptApi {
     data class Tool(val toolType: ToolType, val toolFunction: ToolFunction) {
@@ -14,6 +16,7 @@ interface MyScriptApi {
     var tool: Tool
     var penColor: Int
     val currentLatex: String
+    val jiix: Jiix
     val isIdle: Boolean
     val canUndo: Boolean
     val canRedo: Boolean

@@ -18,6 +18,7 @@ class MyScriptView constructor(
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
     val editorView: EditorView = findViewById(R.id.editor_view)
+    val candidateView: CandidateView = binding.candidateView
 
     init {
         with(editorView) {

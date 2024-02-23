@@ -1,10 +1,13 @@
 package com.knowre.android.myscript.iink
 
+import com.google.gson.GsonBuilder
+import com.knowre.android.myscript.iink.jiix.Jiix
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.IEditorListener
+import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
@@ -82,6 +85,10 @@ internal class MyScript(
     override val currentLatex: String
         get() = editor.latex()
 
+    override val jiix: Jiix
+        get() = editor.export_(null, MimeType.JIIX)
+            .run { gson.fromJson(this, Jiix::class.java) }
+
     override val isIdle: Boolean
         get() = editor.isIdle
 
@@ -114,6 +121,8 @@ internal class MyScript(
      * 때문에, 이 변수로 undo redo 로 인한 [IEditorListener.contentChanged] 발생 시 자동 컨버팅을 하지 않도록 조절 한다.
      */
     private var shouldPreventAutoConvertTemporarily: Boolean = false
+
+    private val gson = GsonBuilder().create()
 
     init {
         with(editor) {
@@ -197,6 +206,15 @@ internal class MyScript(
 
     private fun contentChangedListener(): ContentChanged = { editor, _ ->
         val latex = editor.latex()
+
+//        try {
+//            val file = File(rootFolder, "log.txt")
+//            file.writeText(json)
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
+
+//        editor.import_(MimeType.JIIX, jiix, null)
 
         /**
          * 스크록이 변화하여 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야한다.

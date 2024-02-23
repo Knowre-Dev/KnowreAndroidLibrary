@@ -4,21 +4,17 @@ import com.knowre.android.myscript.iink.MyScriptAssetResource.Companion.DEFAULT_
 import java.io.File
 
 
-internal class MathGrammarLoader constructor(
+internal class MathGrammarLoader(
     private val mathResourceFolder: File,
-    private val mathResourceConfiger: MathResourceConfiger
-
+    private val mathConfiger: MathConfiger
 ) {
 
     fun load(grammarName: String, byteArray: ByteArray) {
         runCatching {
-            byteArray.run {
-                File(mathResourceFolder, grammarName)
-                    .apply { writeBytes(this@run) }
-            }
+            File(mathResourceFolder, grammarName)
+                .apply { writeBytes(byteArray) }
         }
-            .onSuccess { it.let { mathResourceConfiger.write(it.name) } }
-            .onFailure { mathResourceConfiger.write(DEFAULT_GRAMMAR_NAME) }
+            .onSuccess { it.let { mathConfiger.grammar(it.name) } }
+            .onFailure { mathConfiger.grammar(DEFAULT_GRAMMAR_NAME) }
     }
-
 }

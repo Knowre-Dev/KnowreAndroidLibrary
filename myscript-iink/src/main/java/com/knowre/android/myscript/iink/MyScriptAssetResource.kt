@@ -4,14 +4,7 @@ import android.content.Context
 import android.content.res.AssetManager
 
 
-class MyScriptAssetResource constructor(context: Context) {
-
-    companion object {
-        const val MATH_AK_RESOURCE_NAME = "math-ak.res"
-        const val DEFAULT_GRAMMAR_NAME = "math-grm-standard.res"
-        private const val RESOURCE_FOLDER = "resources"
-        private const val MATH_FOLDER = "math"
-    }
+class MyScriptAssetResource(context: Context) {
 
     val acknowledgeByte by lazy {
         context.assets
@@ -25,4 +18,10 @@ class MyScriptAssetResource constructor(context: Context) {
 
     private fun AssetManager.toByteArray(fileName: String) = open(fileName).use { it.readBytes() }
 
+    companion object {
+        const val MATH_AK_RESOURCE_NAME = "math-ak.res"
+        const val DEFAULT_GRAMMAR_NAME = "math-grm-standard.res"
+        private const val RESOURCE_FOLDER = "resources"
+        private const val MATH_FOLDER = "math"
+    }
 }

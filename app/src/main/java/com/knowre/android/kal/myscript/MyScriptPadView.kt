@@ -6,17 +6,20 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.widget.Toast
+import androidx.core.view.isVisible
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
-import com.knowre.android.myscript.iink.FolderProvider
 import com.knowre.android.myscript.iink.MyScriptApi
-import com.knowre.android.myscript.iink.MyScriptAssetResource
 import com.knowre.android.myscript.iink.MyScriptInitializer
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
-import com.knowre.android.myscript.iink.certificate.MyCertificate
+import com.knowre.android.myscript.iink.jiix.Jiix
+import com.knowre.android.myscript.iink.jiix.isValid
+import com.knowre.android.myscript.iink.view.CandidateView
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -32,44 +35,47 @@ internal class MyScriptPadView constructor(
 
     private val mainScope = MainScope()
 
-    private lateinit var myscript: MyScriptApi
+    private lateinit var myScript: MyScriptApi
 
     init {
-        MyScriptInitializer(
-            certificate = MyCertificate.getBytes(),
-            editorView = binding.myScript.editorView,
-            context = context,
-            folders = FolderProvider(context),
-            assetResource = MyScriptAssetResource(context),
-            scope = mainScope
-        )
-            .setGeneralConfiguration()
-            .setMathConfiguration()
-            .initialize {
-                myscript = it.apply {
+        mainScope.launch(Dispatchers.Default) {
+            myScript = MyScriptInitializer(
+                editorView = binding.myScript.editorView,
+                context = context,
+                scope = mainScope
+            )
+                .initialize()
+                .apply {
                     listener = object : MyScriptInterpretListener {
                         override fun onInterpreted(interpreted: String) {
                             binding.latex.text = interpreted
                             mainScope.launch {
-                                binding.redo.isEnabled = myscript.canRedo
-                                binding.undo.isEnabled = myscript.canUndo
+                                binding.redo.isEnabled = myScript.canRedo
+                                binding.undo.isEnabled = myScript.canUndo
                             }
                         }
 
-                        override fun onError(editor: Editor, blockId: String, error: EditorError, message: String) {
+                        override fun onInterpretError(editor: Editor, blockId: String, error: EditorError, message: String) {
                             Log.d("MY_SCRIPT_ERROR", "$error with message $message")
                         }
+
+                        override fun onImportError() {
+                            Toast
+                                .makeText(context, "해당 문자로는 변경이 불가능합니다.", Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     }
+                    isAutoConvertEnabled = false
                 }
-            }
+        }
 
         binding.redo.isEnabled = false
         binding.undo.isEnabled = false
 
-        binding.convert.setOnClickListener { myscript.convert() }
-        binding.deleteAll.setOnClickListener { myscript.eraseAll() }
+        binding.convert.setOnClickListener { myScript.convert() }
+        binding.deleteAll.setOnClickListener { myScript.eraseAll() }
         binding.digitOnlyGrammar.setOnClickListener {
-            myscript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
+            myScript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
         }
 
         binding.defaultGrammar.setOnClickListener {
@@ -77,20 +83,20 @@ internal class MyScriptPadView constructor(
         }
 
         binding.red.setOnClickListener {
-            myscript.penColor = 0xFF0000
+            myScript.penColor = 0xFF0000
         }
 
         binding.blue.setOnClickListener {
-            myscript.penColor = 0x0000FF
+            myScript.penColor = 0x0000FF
         }
 
         binding.black.setOnClickListener {
-            myscript.penColor = 0x000000
+            myScript.penColor = 0x000000
         }
 
         binding.penSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.eraserSwitch.isChecked = false
-            myscript.tool = if (isChecked) {
+            myScript.tool = if (isChecked) {
                 MyScriptApi.Tool(
                     toolType = ToolType.PEN,
                     toolFunction = ToolFunction.DRAWING
@@ -104,24 +110,50 @@ internal class MyScriptPadView constructor(
         }
 
         binding.convertSwitch.setOnCheckedChangeListener { _, isChecked ->
-            myscript.isAutoConvertEnabled = isChecked
+            myScript.isAutoConvertEnabled = isChecked
         }
 
         binding.eraserSwitch.setOnCheckedChangeListener { _, isChecked ->
             val toolType = if (binding.penSwitch.isChecked) ToolType.PEN else ToolType.HAND
             if (isChecked) {
-                myscript.tool = MyScriptApi.Tool(toolType, ToolFunction.ERASING)
+                myScript.tool = MyScriptApi.Tool(toolType, ToolFunction.ERASING)
             } else {
-                myscript.tool = MyScriptApi.Tool(toolType, ToolFunction.DRAWING)
+                myScript.tool = MyScriptApi.Tool(toolType, ToolFunction.DRAWING)
             }
         }
 
         binding.redo.setOnClickListener {
-            myscript.redo()
+            myScript.redo()
         }
 
         binding.undo.setOnClickListener {
-            myscript.undo()
+            myScript.undo()
+        }
+
+        binding.candidateSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                myScript.convert()
+                val jiix = myScript.jiix
+//                Log.d("MY_LOG_JIIX", myScript.jiixJson)
+                if (jiix.isValid() && myScript.isIdle) {
+                    binding.myScript.candidateView.isVisible = true
+                    binding.myScript.candidateView.jiix = jiix
+                } else {
+                    Toast.makeText(context, "현재 스트록 인식중입니다. 다시 시도해주세요.", Toast.LENGTH_SHORT)
+                        .show()
+                    binding.candidateSwitch.isChecked = false
+                }
+            } else {
+                binding.myScript.candidateView.isVisible = false
+            }
+        }
+
+        binding.myScript.candidateView.listener = object : CandidateView.OnSymbolSelected {
+            override fun onSelected(jiix: Jiix) {
+                myScript.import(jiix)
+                myScript.convert()
+                binding.candidateSwitch.isChecked = false
+            }
         }
     }
 

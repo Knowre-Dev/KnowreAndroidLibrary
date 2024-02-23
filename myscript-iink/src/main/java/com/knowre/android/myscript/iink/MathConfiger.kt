@@ -3,9 +3,7 @@ package com.knowre.android.myscript.iink
 import java.io.File
 
 
-const val CONFIG_FILE_NAME = "${MathConfiguration.CONFIG_BUNDLE_NAME_DEFAULT}.conf"
-
-internal class MathResourceConfiger constructor(private val configFolder: File) {
+internal class MathConfiger(private val configFolder: File) {
 
     private val template = { grammarName: String ->
         """
@@ -23,9 +21,12 @@ internal class MathResourceConfiger constructor(private val configFolder: File) 
             .trimIndent()
     }
 
-    val write = { grammarName: String ->
+    val grammar = { grammarName: String ->
         File(configFolder, CONFIG_FILE_NAME)
             .writeText(template(grammarName))
     }
 
+    companion object {
+        private const val CONFIG_FILE_NAME = "${MathConfiguration.CONFIG_BUNDLE_NAME_DEFAULT}.conf"
+    }
 }

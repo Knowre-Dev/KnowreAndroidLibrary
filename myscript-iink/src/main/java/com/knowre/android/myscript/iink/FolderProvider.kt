@@ -4,7 +4,22 @@ import android.content.Context
 import java.io.File
 
 
-class FolderProvider constructor(val context: Context): FolderProviderApi {
+internal class FolderProvider(val context: Context) {
+
+    val rootFolder
+        get() = File(context.filesDir, ROOT)
+
+    val configFolder
+        get() = File(rootFolder, CONFIGURATION)
+
+    val mathResourceFolder
+        get() = File(rootFolder, MATH_RESOURCE)
+
+    val packageFolder
+        get() = File(rootFolder, PACKAGE)
+
+    val contentPackageTempFolder
+        get() =File(rootFolder, CONTENT_PACKAGE)
 
     companion object {
         private const val ROOT = "/myscript"
@@ -13,20 +28,4 @@ class FolderProvider constructor(val context: Context): FolderProviderApi {
         private const val PACKAGE = "/package"
         private const val CONTENT_PACKAGE = "/tmp"
     }
-
-    override val rootFolder
-        get() = File(context.filesDir, ROOT)
-
-    override val configFolder
-        get() = File(rootFolder, CONFIGURATION)
-
-    override val mathResourceFolder
-        get() = File(rootFolder, MATH_RESOURCE)
-
-    override val packageFolder
-        get() = File(rootFolder, PACKAGE)
-
-    override val contentPackageTempFolder
-        get() =File(rootFolder, CONTENT_PACKAGE)
-
 }

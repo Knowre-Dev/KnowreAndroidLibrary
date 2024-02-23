@@ -97,7 +97,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:gravity="right"
+        android:gravity="left"
         android:textColor="@color/black"
         android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -119,9 +119,18 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:text="Convert"
-        android:checked="true"
+        android:checked="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/eraser_switch" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/candidate_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="Candidate"
+        app:layout_constraintStart_toEndOf="@+id/pen_switch"
+        app:layout_constraintTop_toTopOf="@+id/pen_switch" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/pen_switch"

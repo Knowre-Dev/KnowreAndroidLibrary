@@ -5,11 +5,11 @@ import android.content.res.Resources
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 import com.knowre.android.myscript.iink.certificate.MyCertificate
+import com.knowre.android.myscript.iink.view.MyScriptView
 import com.myscript.iink.Configuration
 import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.uireferenceimplementation.EditorBinding
-import com.myscript.iink.uireferenceimplementation.EditorView
 import com.myscript.iink.uireferenceimplementation.FontUtils
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
@@ -24,10 +24,10 @@ import java.nio.charset.StandardCharsets
  * @see [MathConfiguration.sessionTimeMillis]
  */
 private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
-private const val CANDIDATE_COUNT: Int = 5
+private const val CANDIDATE_COUNT: Int = 2
 
 class MyScriptInitializer(
-    editorView: EditorView,
+    private val myScriptView: MyScriptView,
     private val context: Context,
     private val scope: CoroutineScope
 ) {
@@ -40,7 +40,7 @@ class MyScriptInitializer(
 
     private val editorData by lazy {
         EditorBinding(engine, context.provideTypefaces())
-            .openEditor(editorView)
+            .openEditor(myScriptView.editorView)
     }
 
     private val editor: Editor by lazy { editorData.editor!! }

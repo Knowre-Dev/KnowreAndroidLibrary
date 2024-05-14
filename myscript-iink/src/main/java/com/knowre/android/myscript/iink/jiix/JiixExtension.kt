@@ -2,7 +2,6 @@ package com.knowre.android.myscript.iink.jiix
 
 import android.content.Context
 import android.graphics.RectF
-import com.knowre.android.myscript.iink.view.candidate.getPreDefinedCandidates
 import java.util.Collections
 
 
@@ -33,7 +32,7 @@ internal fun Jiix.getAllItems() =
         getAllExpressions()
             .flatMap { it.items ?: Collections.emptyList() }
 
-internal fun Jiix.firstItemOf(id: String) =
+fun Jiix.firstItemOf(id: String) =
     getAllItems().first { it.id == id }
 
 internal fun Jiix.findAllCollidingItems(
@@ -64,10 +63,10 @@ internal fun Expression.getCandidates(label: String) =
 internal fun BoundingBox.isInclude(
     context: Context,
     x: Float, y: Float
-) = transformToRect(context).contains(x, y)
+) = transformToRectF(context).contains(x, y)
 
 
-internal fun BoundingBox.transformToRect(context: Context) = RectF(
+internal fun BoundingBox.transformToRectF(context: Context) = RectF(
     mmToPx(context, x - 1F),
     mmToPx(context, y - 1F),
     mmToPx(context, x + width + 1F),

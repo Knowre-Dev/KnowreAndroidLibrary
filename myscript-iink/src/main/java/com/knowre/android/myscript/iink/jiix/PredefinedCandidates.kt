@@ -1,4 +1,4 @@
-package com.knowre.android.myscript.iink.view.candidate
+package com.knowre.android.myscript.iink.jiix
 
 
 val getPreDefinedCandidates = { label: String ->
@@ -71,8 +71,8 @@ private val preDefinedCandidatesMap = hashMapOf(
     Pair("Y", listOf("Y", "γ", "Υ", "y", "∯", "ℚ", "x", "'")),
     Pair("Z", listOf("z", "Z", "ℤ", "2", "E")),
 
-    Pair("(", listOf("(", "1", "l", "|", "I", "ι", "t", "{", "⊆", "·")),
-    Pair(")", listOf(")", "⟩", ",", ">", "'", "7", "y", "x", "·", ".")),
+    Pair("(", listOf("(", "1", "{", "[", "l", "|", "I", "ι", "t", "{", "⊆", "·")),
+    Pair(")", listOf(")", "1", "}", "]", ">", "⟩", ",", "'", "7", "y", "x", "·", ".")),
     Pair("{", listOf("{", "(", "[", "ξ", "∑", "ε", "Σ", "L")),
     Pair("}", listOf("}", ")", "]", "3", "ξ", "ζ")),
     Pair("[", listOf("[", "(", "{" )),

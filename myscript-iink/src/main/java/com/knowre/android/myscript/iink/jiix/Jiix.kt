@@ -18,6 +18,9 @@ fun Jiix.isValid() =
         expressions.all { it.id != null } &&
         getAllItems().all { it.isValid }
 
+fun Jiix.changeItem(itemId: String, func: Item.() -> Item) =
+    changeItem(firstItemOf(itemId).func())
+
 internal fun Jiix.changeItem(newItem: Item) =
     this.copy(
         items = items?.map { item ->

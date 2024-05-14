@@ -2,6 +2,8 @@ package com.knowre.android.myscript.iink
 
 import com.google.gson.GsonBuilder
 import com.knowre.android.myscript.iink.jiix.Jiix
+import com.knowre.android.myscript.iink.view.StrokeSelectionBasicControl
+import com.knowre.android.myscript.iink.view.StrokeSelectionView
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
@@ -11,6 +13,7 @@ import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -27,8 +30,6 @@ internal class MyScript(
     private val mathGrammarLoader: MathGrammarLoader,
     private val scope: CoroutineScope
 ) : MyScriptApi {
-
-    override var listener: MyScriptInterpretListener? = null
 
     override var isAutoConvertEnabled: Boolean = true
 
@@ -75,6 +76,8 @@ internal class MyScript(
     override val canRedo: Boolean
         get() = editor.canRedo()
 
+    private val strokeInterpretListeners = mutableListOf<MyScriptInterpretListener>()
+
     private var contentPackage: ContentPackage = engine.createPackage(packageFolder)
     private var contentPart: ContentPart = contentPackage.createPart(MATH_PART_NAME)
         set(value) {
@@ -84,10 +87,6 @@ internal class MyScript(
             lastInterpretedLaTex = ""
             field = value
         }
-
-    override val jiix: Jiix
-        get() = editor.export_(null, MimeType.JIIX)
-            .run { gson.fromJson(this, Jiix::class.java) }
 
     private var lastInterpretedLaTex: String = ""
 
@@ -107,7 +106,14 @@ internal class MyScript(
 
     init {
         with(editor) {
-            addEditorListener()
+            addListener(
+                contentChanged = contentChangedListener(),
+                onError = { editor, blockId, error, message ->
+                    strokeInterpretListeners.forEach {
+                        it.onInterpretError(editor, blockId, error, message)
+                    }
+                }
+            )
             part = contentPart
         }
 
@@ -118,6 +124,18 @@ internal class MyScript(
             }
         }
     }
+
+    override fun addListener(listener: MyScriptInterpretListener) {
+        strokeInterpretListeners.add(listener)
+    }
+
+    override fun removeListener(listener: MyScriptInterpretListener) {
+        strokeInterpretListeners.remove(listener)
+    }
+
+    override fun getJiix(): Jiix =
+        editor.export_(null, MimeType.JIIX)
+            .run { gson.fromJson(this, Jiix::class.java) }
 
     override fun undo() {
         shouldPreventAutoConvertTemporarily = true
@@ -139,7 +157,7 @@ internal class MyScript(
             editor.clear()
         } else {
             contentPart = contentPackage.createPart(MATH_PART_NAME)
-            listener?.onInterpreted("")
+            onInterpreted("")
         }
     }
 
@@ -156,9 +174,16 @@ internal class MyScript(
         try {
             editor.import_(MimeType.JIIX, json, null)
         } catch (e: Exception) {
-            listener?.onImportError()
+            strokeInterpretListeners.forEach {
+                it.onImportError()
+            }
         }
     }
+
+    override fun connectStrokeSelection(
+        view: StrokeSelectionView,
+        listener: StrokeSelectionView.Listener?
+    ) = StrokeSelectionBasicControl(view, this, listener)
 
     /**
      * Math grammar 를 [byteArray] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.
@@ -188,18 +213,10 @@ internal class MyScript(
         engine.close()
         rootFolder.deleteRecursively()
         convertingJob?.cancel()
-    }
 
-    private fun Editor.addEditorListener() {
-        addListener(
-            contentChanged = contentChangedListener(),
-            onError = onEditorError()
-        )
     }
 
     private fun contentChangedListener(): ContentChanged = { editor, _ ->
-        val latex = editor.latex()
-
         try {
             val jiix = editor.export_(null, MimeType.JIIX)
             val file = File(rootFolder, "log.txt")
@@ -207,28 +224,40 @@ internal class MyScript(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
         /**
          * 스트록이 변화해 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야 한다.
          * 원래는 이와 같은 처리가 없어도 보통 문제가 없으나, 마이스크립트가 인식하기 애매한 스트록을 인식 시킬 경우,
          * (예, "2 > 3" 처럼 좌, 우 항 모두 존재하는게 아니라 "> 3" 과 같이 우항만 존재하는 스트록)
          * [ContentChanged] 가 계속해서 여러번 불리거나, 컨버팅된 글자에 이상현상이 생기는 등 사이드 이펙트가 발생한다.
          */
-        if (lastInterpretedLaTex != latex) {
-            lastInterpretedLaTex = latex
-            listener?.onInterpreted(latex)
-
-            convertingJob?.cancel()
-            if (shouldAutoConvert) {
-                convertingJob = scope.launch {
-                    delay(CONVERT_STANDBY_DELAY)
-                    convert()
+        editor
+            .latex()
+            .also {
+                if (lastInterpretedLaTex != it) {
+                    lastInterpretedLaTex = it
+                    scope.launch(Dispatchers.Main) {
+                        onInterpreted(it)
+                    }
+                    convertIfNeeded()
                 }
             }
+    }
+
+    private fun onInterpreted(latex: String) {
+        strokeInterpretListeners.forEach {
+            it.onInterpreted(latex)
         }
     }
 
-    private fun onEditorError(): OnError = { editor, blockId, error, message -> listener?.onInterpretError(editor, blockId, error, message) }
+    private fun convertIfNeeded() {
+        convertingJob?.cancel()
+        if (shouldAutoConvert) {
+            convertingJob = scope.launch {
+                delay(CONVERT_STANDBY_DELAY)
+                convert()
+            }
+        }
+    }
 
     companion object {
         /**
@@ -250,6 +279,10 @@ internal class MyScript(
          */
         private const val MATH_PART_NAME = "Math"
 
+        /**
+         * 컨버팅 딜레이를 주지 않으면 (, {, [ 같은 괄호를 작성했을 때 1, c, < 와 같은 잘못된 문자로 바로 컨버팅되기 때문에 일정 딜레이를 준다.
+         * (위 괄호들은 양쪽 쌍으로 작성한 후 컨버팅해야 제대로 인식된다.)
+         */
         private const val CONVERT_STANDBY_DELAY: Long = 200
     }
 }

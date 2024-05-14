@@ -1,15 +1,15 @@
-package com.knowre.android.myscript.iink.view.candidate
+package com.knowre.android.myscript.iink.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.knowre.android.myscript.iink.databinding.ViewCandidateBinding
+import com.knowre.android.myscript.iink.databinding.ViewCandidateItemBinding
 
 
 internal class CandidateAdapter(
     private val onCandidateClicked: (Candidate.Data) -> Unit,
     private val onExitClicked: () -> Unit
-): RecyclerView.Adapter<CandidateViewHolder>() {
+) : RecyclerView.Adapter<CandidateViewHolder>() {
 
     private var candidates = listOf<Candidate>()
 
@@ -28,20 +28,26 @@ internal class CandidateAdapter(
 
     fun setCandidates(candidates: List<Candidate>) {
         this.candidates = candidates
+            .toMutableList()
+            .apply { if (isNotEmpty()) add(Candidate.Exit()) }
+
         notifyDataSetChanged()
     }
 }
 
 internal class CandidateViewHolder(
-    private val binding: ViewCandidateBinding
-): RecyclerView.ViewHolder(binding.root) {
+    private val binding: ViewCandidateItemBinding
+) : RecyclerView.ViewHolder(binding.root) {
 
     private lateinit var candidate: Candidate
 
     fun bind(candidate: Candidate) {
         this.candidate = candidate
-        if (candidate is Candidate.Data) {
-            binding.candidateText.text = candidate.string
+        when (candidate) {
+            is Candidate.Data -> binding.candidateText.text = candidate.string
+            is Candidate.Exit -> {
+                binding.candidateText.text = "X"
+            }
         }
     }
 
@@ -51,7 +57,7 @@ internal class CandidateViewHolder(
             onCandidateClicked: (Candidate.Data) -> Unit,
             onExitClicked: () -> Unit
         ): CandidateViewHolder {
-            return CandidateViewHolder(ViewCandidateBinding.inflate(LayoutInflater.from(parent.context), parent, false)).apply {
+            return CandidateViewHolder(ViewCandidateItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)).apply {
                 binding.root.setOnClickListener {
                     if (candidate is Candidate.Data) {
                         onCandidateClicked(candidate as Candidate.Data)

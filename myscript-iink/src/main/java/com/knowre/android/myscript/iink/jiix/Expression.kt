@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 
 data class Expression(
-    val id: String,
+    val id: String?,
     val type: String,
     val items: List<Item>?,
     @SerializedName("open symbol")

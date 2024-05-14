@@ -19,6 +19,6 @@ data class Item(
         get() = box != null
 }
 
-fun Item.changeLabel(label: String): Item {
+internal fun Item.changeLabel(label: String): Item {
     return copy(label = label)
 }

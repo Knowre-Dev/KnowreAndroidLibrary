@@ -1,9 +1,9 @@
-package com.knowre.android.myscript.iink.view
+package com.knowre.android.kal.myscript
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.knowre.android.myscript.iink.databinding.ViewCandidateItemBinding
+import com.knowre.android.kal.databinding.ViewCandidateItemBinding
 
 
 internal class CandidateAdapter(
@@ -14,10 +14,16 @@ internal class CandidateAdapter(
     private var candidates = listOf<Candidate>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CandidateViewHolder {
-        return CandidateViewHolder.newInstance(parent, onCandidateClicked) {
-            setCandidates(listOf())
-            onExitClicked()
-        }
+        return CandidateViewHolder.newInstance(parent,
+            onCandidateClicked = {
+                clear()
+                onCandidateClicked(it)
+            },
+            onExitClicked = {
+                clear()
+                onExitClicked()
+            }
+        )
     }
 
     override fun onBindViewHolder(holder: CandidateViewHolder, position: Int) {
@@ -30,7 +36,11 @@ internal class CandidateAdapter(
         this.candidates = candidates
             .toMutableList()
             .apply { if (isNotEmpty()) add(Candidate.Exit()) }
+            .also { notifyDataSetChanged() }
+    }
 
+    fun clear() {
+        this.candidates = listOf()
         notifyDataSetChanged()
     }
 }
@@ -44,7 +54,7 @@ internal class CandidateViewHolder(
     fun bind(candidate: Candidate) {
         this.candidate = candidate
         when (candidate) {
-            is Candidate.Data -> binding.candidateText.text = candidate.string
+            is Candidate.Data -> binding.candidateText.text = candidate.label
             is Candidate.Exit -> {
                 binding.candidateText.text = "X"
             }

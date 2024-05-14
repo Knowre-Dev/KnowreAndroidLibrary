@@ -66,7 +66,7 @@ internal fun BoundingBox.isInclude(
 ) = transformToRectF(context).contains(x, y)
 
 
-internal fun BoundingBox.transformToRectF(context: Context) = RectF(
+fun BoundingBox.transformToRectF(context: Context) = RectF(
     mmToPx(context, x - 1F),
     mmToPx(context, y - 1F),
     mmToPx(context, x + width + 1F),

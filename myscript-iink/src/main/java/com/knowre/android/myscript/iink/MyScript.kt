@@ -2,7 +2,7 @@ package com.knowre.android.myscript.iink
 
 import com.google.gson.GsonBuilder
 import com.knowre.android.myscript.iink.jiix.Jiix
-import com.knowre.android.myscript.iink.view.StrokeSelectionBasicControl
+import com.knowre.android.myscript.iink.view.StrokeSelectionModeBasicControl
 import com.knowre.android.myscript.iink.view.StrokeSelectionView
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
@@ -180,10 +180,10 @@ internal class MyScript(
         }
     }
 
-    override fun connectStrokeSelection(
+    override fun useBasicSelectionControl(
         view: StrokeSelectionView,
         listener: StrokeSelectionView.Listener?
-    ) = StrokeSelectionBasicControl(view, this, listener)
+    ) = StrokeSelectionModeBasicControl(view, this, listener)
 
     /**
      * Math grammar 를 [byteArray] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.

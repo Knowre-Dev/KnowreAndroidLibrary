@@ -1,7 +1,7 @@
 package com.knowre.android.myscript.iink
 
 import com.knowre.android.myscript.iink.jiix.Jiix
-import com.knowre.android.myscript.iink.view.StrokeSelectionBasicControl
+import com.knowre.android.myscript.iink.view.StrokeSelectionModeBasicControl
 import com.knowre.android.myscript.iink.view.StrokeSelectionView
 
 
@@ -11,10 +11,6 @@ interface MyScriptApi {
         companion object {
             val DEFAULT = Tool(ToolType.HAND, ToolFunction.DRAWING)
         }
-    }
-
-    enum class StrokeSelectionModeError {
-        INVALID_STROKE, EDITOR_BUSY
     }
 
     var isAutoConvertEnabled: Boolean
@@ -35,7 +31,10 @@ interface MyScriptApi {
     fun convert()
     fun import(jiix: Jiix)
     fun import(json: String)
-    fun connectStrokeSelection(view: StrokeSelectionView, listener: StrokeSelectionView.Listener?): StrokeSelectionBasicControl
+    fun useBasicSelectionControl(
+        view: StrokeSelectionView,
+        listener: StrokeSelectionView.Listener?
+    ): StrokeSelectionModeBasicControl
     fun loadMathGrammar(grammarName: String, byteArray: ByteArray)
     fun close()
 }

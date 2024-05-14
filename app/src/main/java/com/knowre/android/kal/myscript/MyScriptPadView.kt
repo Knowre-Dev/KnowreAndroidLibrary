@@ -31,7 +31,6 @@ import com.knowre.android.myscript.iink.view.StrokeSelectionModeError
 import com.knowre.android.myscript.iink.view.StrokeSelectionView
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -70,7 +69,7 @@ internal class MyScriptPadView constructor(
     }
 
     private fun initializeMyScript() {
-        mainScope.launch(Dispatchers.Default) {
+        mainScope.launch {
             myScript = MyScriptInitializer(
                 myScriptView = binding.myScriptView,
                 context = context,

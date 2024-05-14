@@ -59,8 +59,10 @@ class MyScriptInitializer(
     private val assetResource = MyScriptAssetResource(context)
 
     suspend fun initialize(): MyScriptApi {
-        processResourceAndFolder()
-        engine.configuration.generalConfig()
+        withContext(Dispatchers.Default) {
+            processResourceAndFolder()
+            engine.configuration.generalConfig()
+        }
 
         return withContext(Dispatchers.Main) {
             editor.configuration.mathConfig()

@@ -29,19 +29,20 @@ class StrokeSelectionModeBasicControl(
         strokeSelectionView.listener = strokeSelectListener
     }
 
-    fun enable(onFailure: ((StrokeSelectionModeError) -> Unit)?) {
+    fun enable(onFailure: ((StrokeSelectionModeError) -> Unit)) {
         with(myScript) {
-            checkStrokeSelectionAvailable()
-                .onSuccess {
-                    convert()
-                    strokeSelectionView.show(it)
-                }
-                .onFailure { error ->
-                    onFailure?.let {
-                        it((error as SelectionUnavailableException).errorType)
+            if (isIdle) {
+                convert()
+                getJiix().let {
+                    if (it.isValid()) {
+                        strokeSelectionView.show(it)
+                    } else {
+                        onFailure(StrokeSelectionModeError.INVALID_STROKE)
                     }
-                    strokeSelectionView.hide()
                 }
+            } else {
+                onFailure(StrokeSelectionModeError.EDITOR_BUSY)
+            }
         }
     }
 
@@ -61,18 +62,4 @@ class StrokeSelectionModeBasicControl(
         }
         strokeSelectionView.hide()
     }
-
-    private fun MyScriptApi.checkStrokeSelectionAvailable() =
-        getJiix().let {
-            if (!it.isValid())
-                return@let Result.failure(SelectionUnavailableException(StrokeSelectionModeError.INVALID_STROKE))
-            if (!isIdle)
-                return@let Result.failure(SelectionUnavailableException(StrokeSelectionModeError.EDITOR_BUSY))
-
-            Result.success(it)
-        }
-
-    class SelectionUnavailableException(
-        val errorType: StrokeSelectionModeError
-    ) : Throwable(errorType.toString())
 }

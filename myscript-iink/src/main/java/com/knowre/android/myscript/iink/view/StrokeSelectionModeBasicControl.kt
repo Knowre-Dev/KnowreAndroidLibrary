@@ -31,7 +31,7 @@ class StrokeSelectionModeBasicControl(
 
     fun enable(onFailure: ((StrokeSelectionModeError) -> Unit)?) {
         with(myScript) {
-            myScript.checkStrokeSelectionAvailable()
+            checkStrokeSelectionAvailable()
                 .onSuccess {
                     convert()
                     strokeSelectionView.show(it)

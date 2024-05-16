@@ -183,7 +183,7 @@ internal class MyScript(
     override fun useBasicSelectionControl(
         view: StrokeSelectionView,
         listener: StrokeSelectionView.Listener?
-    ) = StrokeSelectionModeBasicControl(view, this, listener)
+    ) = StrokeSelectionModeBasicControl(listener, view, this)
 
     /**
      * Math grammar 를 [byteArray] 로 변경한 후 현재 part 를 닫고 새로운 part 를 만들어 할당한다.

@@ -31,17 +31,17 @@ class StrokeSelectionModeBasicControl(
 
     fun enable(onFailure: ((StrokeSelectionModeError) -> Unit)?) {
         with(myScript) {
-            convert()
-            strokeSelectionView.post {
-                checkStrokeSelectionAvailable()
-                    .onSuccess { strokeSelectionView.show(it) }
-                    .onFailure { error ->
-                        onFailure?.let {
-                            it((error as SelectionUnavailableException).errorType)
-                        }
-                        strokeSelectionView.hide()
+            myScript.checkStrokeSelectionAvailable()
+                .onSuccess {
+                    convert()
+                    strokeSelectionView.show(it)
+                }
+                .onFailure { error ->
+                    onFailure?.let {
+                        it((error as SelectionUnavailableException).errorType)
                     }
-            }
+                    strokeSelectionView.hide()
+                }
         }
     }
 

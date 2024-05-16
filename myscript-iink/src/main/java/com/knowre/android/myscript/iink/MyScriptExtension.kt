@@ -4,7 +4,7 @@ import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 
 
-internal fun MyScriptApi.addListener(
+fun MyScriptApi.addListener(
     onInterpreted: (interpreted: String) -> Unit = { _ -> },
     onInterpretError: (editor: Editor, blockId: String, error: EditorError, message: String) -> Unit = { _, _, _, _ -> },
     onImportError: () -> Unit =  {  }

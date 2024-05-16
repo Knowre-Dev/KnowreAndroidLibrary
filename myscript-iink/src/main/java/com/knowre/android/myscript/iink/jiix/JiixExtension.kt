@@ -13,7 +13,7 @@ internal fun Jiix.getAllExpressions(): List<Expression> {
     return this.expressions?.flatten() ?: Collections.emptyList()
 }
 
-internal fun Jiix.getCandidates(item: Item): List<String> {
+fun Jiix.getCandidates(item: Item): List<String> {
     val iinkCandidates = findExpressionMatches(item.boundingBox)
         ?.getCandidates(item.label)
         ?: listOf()
@@ -35,7 +35,7 @@ internal fun Jiix.getAllItems() =
 fun Jiix.firstItemOf(id: String) =
     getAllItems().first { it.id == id }
 
-internal fun Jiix.findAllCollidingItems(
+fun Jiix.findAllCollidingItems(
     context: Context,
     touchDownX: Float, touchDownY: Float
 ) = getAllItems()

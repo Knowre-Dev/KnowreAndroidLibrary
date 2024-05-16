@@ -16,6 +16,7 @@ class MyScriptView constructor(
 ) : FrameLayout(context, attrs) {
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
+//    val selection: ItemSelectionView = binding.selection
     internal val editorView: EditorView = findViewById(R.id.editor_view)
 
     init {

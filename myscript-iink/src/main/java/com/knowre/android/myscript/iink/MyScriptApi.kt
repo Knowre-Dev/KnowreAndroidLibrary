@@ -1,8 +1,6 @@
 package com.knowre.android.myscript.iink
 
 import com.knowre.android.myscript.iink.jiix.Jiix
-import com.knowre.android.myscript.iink.view.StrokeSelectionModeBasicControl
-import com.knowre.android.myscript.iink.view.StrokeSelectionView
 
 
 interface MyScriptApi {
@@ -31,10 +29,6 @@ interface MyScriptApi {
     fun convert()
     fun import(jiix: Jiix)
     fun import(json: String)
-    fun useBasicSelectionControl(
-        view: StrokeSelectionView,
-        listener: StrokeSelectionView.Listener?
-    ): StrokeSelectionModeBasicControl
     fun loadMathGrammar(grammarName: String, byteArray: ByteArray)
     fun close()
 }

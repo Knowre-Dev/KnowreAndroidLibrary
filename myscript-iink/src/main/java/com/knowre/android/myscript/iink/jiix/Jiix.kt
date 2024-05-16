@@ -13,12 +13,12 @@ data class Jiix(
     val version: String
 )
 
-internal fun Jiix.isValid() =
+fun Jiix.isValid() =
     !expressions.isNullOrEmpty() &&
         expressions.all { it.id != null } &&
         getAllItems().all { it.isValid }
 
-internal fun Jiix.changeItem(itemId: String, func: Item.() -> Item) =
+fun Jiix.changeItem(itemId: String, func: Item.() -> Item) =
     changeItem(firstItemOf(itemId).func())
 
 internal fun Jiix.changeItem(newItem: Item) =

@@ -5,30 +5,21 @@ import android.content.res.AssetManager
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
-import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
-import com.knowre.android.extension.android.doOnPostLayout
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
 import com.knowre.android.myscript.iink.MyScriptApi
 import com.knowre.android.myscript.iink.MyScriptInitializer
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
-import com.knowre.android.myscript.iink.jiix.Item
-import com.knowre.android.myscript.iink.jiix.transformToRectF
-import com.knowre.android.myscript.iink.view.StrokeSelectionModeBasicControl
-import com.knowre.android.myscript.iink.view.StrokeSelectionModeError
-import com.knowre.android.myscript.iink.view.StrokeSelectionView
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 import kotlinx.coroutines.MainScope
@@ -47,13 +38,9 @@ internal class MyScriptPadView constructor(
     private val mainScope = MainScope()
 
     private lateinit var myScript: MyScriptApi
-    private lateinit var selectionControl: StrokeSelectionModeBasicControl
 
     private val candidateAdapter = CandidateAdapter(
-        onCandidateClicked = { candidate ->
-            selectionControl
-                .changeLabel(candidate.itemId, candidate.label)
-        },
+        onCandidateClicked = { candidate -> },
         onExitClicked = {}
     )
 
@@ -78,11 +65,6 @@ internal class MyScriptPadView constructor(
                 .initialize()
                 .apply { addListener(interpretListener) }
                 .apply { isAutoConvertEnabled = false }
-
-            selectionControl = myScript.useBasicSelectionControl(
-                view = binding.strokeSelection,
-                listener = selectionListener
-            )
         }
     }
 
@@ -166,39 +148,7 @@ internal class MyScriptPadView constructor(
             myScript.undo()
         }
 
-        binding.candidateSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                selectionControl.enable(onFailure = {
-                    when (it) {
-                        StrokeSelectionModeError.EDITOR_BUSY ->
-                            Toast
-                                .makeText(context, "Editor is busy", Toast.LENGTH_SHORT)
-                                .show()
-
-                        StrokeSelectionModeError.INVALID_STROKE ->
-                            Toast
-                                .makeText(context, "Invalid Stroke", Toast.LENGTH_SHORT)
-                                .show()
-                    }
-                })
-            } else {
-                selectionControl.disable()
-            }
-        }
-    }
-
-    private fun RecyclerView.moveToTopOf(rectF: RectF, margin: Float) {
-        doOnPostLayout {
-            val newX = (rectF.centerX() - (width / 2))
-            val newY = rectF.top - 10F.dp - height
-            val rightLimit = this@MyScriptPadView.width - width - margin
-            updateLayoutParams {
-                x = newX
-                    .coerceAtLeast(margin)
-                    .coerceAtMost(rightLimit)
-                y = newY
-            }
-        }
+        binding.candidateSwitch.setOnCheckedChangeListener { _, isChecked -> }
     }
 
     private val interpretListener: MyScriptInterpretListener
@@ -217,32 +167,6 @@ internal class MyScriptPadView constructor(
                 Toast
                     .makeText(context, "해당 문자로는 변경이 불가능합니다.", Toast.LENGTH_SHORT)
                     .show()
-            }
-        }
-
-    private val selectionListener: StrokeSelectionView.Listener
-        get() = object : StrokeSelectionView.Listener {
-            override fun onStrokeSelected(item: Item, candidates: List<String>) {
-                if (candidates.isNotEmpty()) {
-                    candidateAdapter
-                        .setCandidates(candidates.map { Candidate.Data(item.id, it) })
-
-                    binding.candidate.moveToTopOf(
-                        rectF = item.boundingBox.transformToRectF(context),
-                        margin = 10F.dp
-                    )
-                } else {
-                    showNoCandidateAvailable()
-                }
-            }
-
-            override fun onNoStrokeSelected() {
-                candidateAdapter.clear()
-            }
-
-            override fun onViewHidden() {
-                binding.candidateSwitch.isChecked = false
-                candidateAdapter.clear()
             }
         }
 

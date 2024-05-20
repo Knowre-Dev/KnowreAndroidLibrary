@@ -17,7 +17,15 @@ fun Jiix.getCandidates(item: Item): List<String> {
     val iinkCandidates = findExpressionMatches(item.boundingBox)
         ?.getCandidates(item.label)
         ?: listOf()
-    return (iinkCandidates + getPreDefinedCandidates(item.label))
+
+    val preDefinedCandidates = preDefinedCandidateInfos
+        .find { it.label == item.label }
+        ?.candidates ?: listOf()
+
+    val excludeCandidates = preDefinedCandidateInfos.flatMap { it.excludes }
+
+    return (iinkCandidates + preDefinedCandidates)
+        .minus(excludeCandidates.toSet())
         .distinct()
 }
 

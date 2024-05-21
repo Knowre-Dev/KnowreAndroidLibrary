@@ -12,7 +12,7 @@ data class Expression(
     @SerializedName("close symbol")
     val closeSymbol: String?,
     @SerializedName("bounding-box")
-    val boundingBox: BoundingBox,
+    val boundingBox: BoundingBox?,
     val symbols: List<Symbol>?,
     val operands: List<Expression>?
 )

@@ -105,7 +105,23 @@ internal class MyScript(
     init {
         with(editor) {
             addListener(
-                contentChanged = contentChangedListener(),
+                contentChanged = { _, _ ->
+                    /**
+                     * 스트록이 변화해 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야 한다.
+                     * 원래는 이와 같은 처리가 없어도 보통 문제가 없으나, 마이스크립트가 인식하기 애매한 스트록을 인식 시킬 경우,
+                     * (예, "2 > 3" 처럼 좌, 우 항 모두 존재하는게 아니라 "> 3" 과 같이 우항만 존재하는 스트록)
+                     * [ContentChanged] 가 계속해서 여러번 불리거나, 컨버팅된 글자에 이상현상이 생기는 등 사이드 이펙트가 발생한다.
+                     */
+                    editor.latex().also {
+                        if (lastInterpretedLaTex != it) {
+                            lastInterpretedLaTex = it
+                            scope.launch(Dispatchers.Main) {
+                                onInterpreted(it)
+                            }
+                            convertIfNeeded()
+                        }
+                    }
+                },
                 onError = { editor, blockId, error, message ->
                     strokeInterpretListeners.forEach {
                         it.onInterpretError(editor, blockId, error, message)
@@ -165,7 +181,7 @@ internal class MyScript(
     }
 
     override fun import(jiix: Jiix) {
-        editor.import_(MimeType.JIIX, gson.toJson(jiix), null)
+        import(gson.toJson(jiix))
     }
 
     override fun import(json: String) {
@@ -207,33 +223,6 @@ internal class MyScript(
         rootFolder.deleteRecursively()
         convertingJob?.cancel()
 
-    }
-
-    private fun contentChangedListener(): ContentChanged = { editor, _ ->
-        try {
-            val jiix = editor.export_(null, MimeType.JIIX)
-            val file = File(rootFolder, "log.txt")
-            file.writeText(jiix)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        /**
-         * 스트록이 변화해 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야 한다.
-         * 원래는 이와 같은 처리가 없어도 보통 문제가 없으나, 마이스크립트가 인식하기 애매한 스트록을 인식 시킬 경우,
-         * (예, "2 > 3" 처럼 좌, 우 항 모두 존재하는게 아니라 "> 3" 과 같이 우항만 존재하는 스트록)
-         * [ContentChanged] 가 계속해서 여러번 불리거나, 컨버팅된 글자에 이상현상이 생기는 등 사이드 이펙트가 발생한다.
-         */
-        editor
-            .latex()
-            .also {
-                if (lastInterpretedLaTex != it) {
-                    lastInterpretedLaTex = it
-                    scope.launch(Dispatchers.Main) {
-                        onInterpreted(it)
-                    }
-                    convertIfNeeded()
-                }
-            }
     }
 
     private fun onInterpreted(latex: String) {

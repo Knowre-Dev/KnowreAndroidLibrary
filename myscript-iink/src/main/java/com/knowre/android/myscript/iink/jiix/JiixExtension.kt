@@ -24,7 +24,7 @@ fun Jiix.getCandidates(item: Item): List<String> {
 
     val excludeCandidates = preDefinedCandidateInfos.flatMap { it.excludes }
 
-    return (iinkCandidates + preDefinedCandidates)
+    return (preDefinedCandidates + iinkCandidates)
         .minus(excludeCandidates.toSet())
         .distinct()
 }

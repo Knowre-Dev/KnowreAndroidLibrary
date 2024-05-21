@@ -13,11 +13,10 @@ import com.myscript.iink.uireferenceimplementation.R
 class MyScriptView constructor(
     context: Context,
     attrs: AttributeSet? = null
-
 ) : FrameLayout(context, attrs) {
 
     private val binding = ViewMyscriptBinding.inflate(LayoutInflater.from(context), this, true)
-    val editorView: EditorView = findViewById(R.id.editor_view)
+    internal val editorView: EditorView = findViewById(R.id.editor_view)
 
     init {
         with(editorView) {
@@ -30,5 +29,4 @@ class MyScriptView constructor(
             }
         }
     }
-
 }

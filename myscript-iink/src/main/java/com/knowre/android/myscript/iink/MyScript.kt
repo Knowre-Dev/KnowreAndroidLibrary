@@ -1,40 +1,23 @@
 package com.knowre.android.myscript.iink
 
+import com.google.gson.GsonBuilder
+import com.knowre.android.myscript.iink.jiix.Jiix
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.Editor
 import com.myscript.iink.Engine
 import com.myscript.iink.IEditorListener
+import com.myscript.iink.MimeType
 import com.myscript.iink.PointerTool
 import com.myscript.iink.uireferenceimplementation.InputController
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.properties.Delegates
 
-
-/**
- * force pen 으로 설정해야 pen 이든 touch 이든지 상관없이 drawing/erasing 을 할 수 있게 된다. force pen 이라고해서 pen 으로만 drawing/erasing 한다라고 생각하면 안된다.
- * force pen 은 drawing/erasing 모드 force touch 는 drawing 이 아니라 gesture detecting 모드라고 생각하면 된다.
- * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
- */
-private const val DRAWING_OR_ERASING_ONLY = InputController.INPUT_MODE_FORCE_PEN
-
-/**
- * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
- * (참고 : 현재 앱에서는 이 상태를 사용하지 않지만. 기능 자체는 넣어 두었다.)
- */
-private const val DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
-
-/**
- * [ContentPart] 를 어떤 Type 의 마이스크립트 기능으로 사용할지를 나타낸다. 이는 변경되면 안된다.
- * 미리 정의된 Text, Math, Drawing, Diagram, Raw Content, Text Document 중 하나여야하며 우리 앱에서는 Math 만 사용한다.
- */
-private const val MATH_PART_NAME = "Math"
-
-private const val CONVERT_STANDBY_DELAY: Long = 200
 
 internal class MyScript(
     packageFolder: File,
@@ -44,10 +27,7 @@ internal class MyScript(
     private val editor: Editor,
     private val mathGrammarLoader: MathGrammarLoader,
     private val scope: CoroutineScope
-
 ) : MyScriptApi {
-
-    override var listener: MyScriptInterpretListener? = null
 
     override var isAutoConvertEnabled: Boolean = true
 
@@ -82,6 +62,9 @@ internal class MyScript(
     override val currentLatex: String
         get() = editor.latex()
 
+    override val jiixJson: String
+        get() = editor.export_(null, MimeType.JIIX)
+
     override val isIdle: Boolean
         get() = editor.isIdle
 
@@ -90,6 +73,8 @@ internal class MyScript(
 
     override val canRedo: Boolean
         get() = editor.canRedo()
+
+    private val strokeInterpretListeners = mutableListOf<MyScriptInterpretListener>()
 
     private var contentPackage: ContentPackage = engine.createPackage(packageFolder)
     private var contentPart: ContentPart = contentPackage.createPart(MATH_PART_NAME)
@@ -103,7 +88,7 @@ internal class MyScript(
 
     private var lastInterpretedLaTex: String = ""
 
-    private var convertStandby: Job? = null
+    private var convertingJob: Job? = null
 
     private val shouldAutoConvert
         get() = isAutoConvertEnabled && !shouldPreventAutoConvertTemporarily
@@ -115,9 +100,34 @@ internal class MyScript(
      */
     private var shouldPreventAutoConvertTemporarily: Boolean = false
 
+    private val gson = GsonBuilder().create()
+
     init {
         with(editor) {
-            addEditorListener()
+            addListener(
+                contentChanged = { _, _ ->
+                    /**
+                     * 스트록이 변화해 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야 한다.
+                     * 원래는 이와 같은 처리가 없어도 보통 문제가 없으나, 마이스크립트가 인식하기 애매한 스트록을 인식 시킬 경우,
+                     * (예, "2 > 3" 처럼 좌, 우 항 모두 존재하는게 아니라 "> 3" 과 같이 우항만 존재하는 스트록)
+                     * [ContentChanged] 가 계속해서 여러번 불리거나, 컨버팅된 글자에 이상현상이 생기는 등 사이드 이펙트가 발생한다.
+                     */
+                    editor.latex().also {
+                        if (lastInterpretedLaTex != it) {
+                            lastInterpretedLaTex = it
+                            scope.launch(Dispatchers.Main) {
+                                onInterpreted(it)
+                            }
+                            convertIfNeeded()
+                        }
+                    }
+                },
+                onError = { editor, blockId, error, message ->
+                    strokeInterpretListeners.forEach {
+                        it.onInterpretError(editor, blockId, error, message)
+                    }
+                }
+            )
             part = contentPart
         }
 
@@ -128,6 +138,18 @@ internal class MyScript(
             }
         }
     }
+
+    override fun addListener(listener: MyScriptInterpretListener) {
+        strokeInterpretListeners.add(listener)
+    }
+
+    override fun removeListener(listener: MyScriptInterpretListener) {
+        strokeInterpretListeners.remove(listener)
+    }
+
+    override fun getJiix(): Jiix =
+        editor.export_(null, MimeType.JIIX)
+            .run { gson.fromJson(this, Jiix::class.java) }
 
     override fun undo() {
         shouldPreventAutoConvertTemporarily = true
@@ -149,13 +171,27 @@ internal class MyScript(
             editor.clear()
         } else {
             contentPart = contentPackage.createPart(MATH_PART_NAME)
-            listener?.onInterpreted("")
+            onInterpreted("")
         }
     }
 
     override fun convert() {
-        convertStandby?.cancel()
+        convertingJob?.cancel()
         editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
+    }
+
+    override fun import(jiix: Jiix) {
+        import(gson.toJson(jiix))
+    }
+
+    override fun import(json: String) {
+        try {
+            editor.import_(MimeType.JIIX, json, null)
+        } catch (e: Exception) {
+            strokeInterpretListeners.forEach {
+                it.onImportError()
+            }
+        }
     }
 
     /**
@@ -185,39 +221,50 @@ internal class MyScript(
         editor.close()
         engine.close()
         rootFolder.deleteRecursively()
-        convertStandby?.cancel()
+        convertingJob?.cancel()
+
     }
 
-    private fun Editor.addEditorListener() {
-        addListener(
-            contentChanged = contentChangedListener(),
-            onError = onEditorError()
-        )
+    private fun onInterpreted(latex: String) {
+        strokeInterpretListeners.forEach {
+            it.onInterpreted(latex)
+        }
     }
 
-    private fun contentChangedListener(): ContentChanged = { editor, _ ->
-        val latex = editor.latex()
-
-        /**
-         * 스크록이 변화하여 [ContentChanged] 가 불렸는데, 현재의 latex 가 마지막으로 인식된 latex 와 값이 같으면, converting 작업을 따로 하지 않아야한다.
-         * 원래는 이와 같은 처리가 없어도 보통 문제가 없으나, 마이스크립트가 인식하기 애매한 스트록을 인식 시킬 경우,
-         * (예, "2 > 3" 처럼 좌, 우 항 모두 존재하는게 아니라 "> 3" 과 같이 우항만 존재하는 스트록)
-         * [ContentChanged] 가 계속해서 여러번 불리거나, 컨버팅된 글자에 이상현상이 생기는 등 사이드 이펙트가 발생한다.
-         */
-        if (lastInterpretedLaTex != latex) {
-            lastInterpretedLaTex = latex
-            listener?.onInterpreted(latex)
-
-            convertStandby?.cancel()
-            if (shouldAutoConvert) {
-                convertStandby = scope.launch {
-                    delay(CONVERT_STANDBY_DELAY)
-                    convert()
-                }
+    private fun convertIfNeeded() {
+        convertingJob?.cancel()
+        if (shouldAutoConvert) {
+            convertingJob = scope.launch {
+                delay(CONVERT_STANDBY_DELAY)
+                convert()
             }
         }
     }
 
-    private fun onEditorError(): OnError = { editor, blockId, error, message -> listener?.onError(editor, blockId, error, message) }
+    companion object {
+        /**
+         * force pen 으로 설정해야 pen 이든 touch 이든지 상관없이 drawing/erasing 을 할 수 있게 된다. force pen 이라고해서 pen 으로만 drawing/erasing 한다라고 생각하면 안된다.
+         * force pen 은 drawing/erasing 모드 force touch 는 drawing 이 아니라 gesture detecting 모드라고 생각하면 된다.
+         * 참고 : pen 으로 drawing 할지 touch 로 drawing 할지는 editor.toolController.setToolForType(..) 로 설정한다.
+         */
+        private const val DRAWING_OR_ERASING_ONLY = InputController.INPUT_MODE_FORCE_PEN
 
+        /**
+         * AUTO 일 경우 pen 으로 터치할 경우 force pen(drawing mode) 이되고 손으로 터치 할 경우 force touch(gesture detecting mode) 가 된다.
+         * (참고 : 현재 앱에서는 이 상태를 사용하지 않지만. 기능 자체는 넣어 두었다.)
+         */
+        private const val DRAWING_OR_ERASING_BY_PEN_BUT_GESTURE_BY_HAND = InputController.INPUT_MODE_AUTO
+
+        /**
+         * [ContentPart] 를 어떤 Type 의 마이스크립트 기능으로 사용할지를 나타낸다. 이는 변경되면 안된다.
+         * 미리 정의된 Text, Math, Drawing, Diagram, Raw Content, Text Document 중 하나여야하며 우리 앱에서는 Math 만 사용한다.
+         */
+        private const val MATH_PART_NAME = "Math"
+
+        /**
+         * 컨버팅 딜레이를 주지 않으면 (, {, [ 같은 괄호를 작성했을 때 1, c, < 와 같은 잘못된 문자로 바로 컨버팅되기 때문에 일정 딜레이를 준다.
+         * (위 괄호들은 양쪽 쌍으로 작성한 후 컨버팅해야 제대로 인식된다.)
+         */
+        private const val CONVERT_STANDBY_DELAY: Long = 200
+    }
 }

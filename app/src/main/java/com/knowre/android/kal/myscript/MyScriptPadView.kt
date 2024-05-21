@@ -2,19 +2,24 @@ package com.knowre.android.kal.myscript
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.shape.MaterialShapeDrawable
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.knowre.android.kal.databinding.ViewMyscriptPadBinding
-import com.knowre.android.myscript.iink.FolderProvider
 import com.knowre.android.myscript.iink.MyScriptApi
-import com.knowre.android.myscript.iink.MyScriptAssetResource
 import com.knowre.android.myscript.iink.MyScriptInitializer
 import com.knowre.android.myscript.iink.MyScriptInterpretListener
 import com.knowre.android.myscript.iink.ToolFunction
 import com.knowre.android.myscript.iink.ToolType
-import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.myscript.iink.Editor
 import com.myscript.iink.EditorError
 import kotlinx.coroutines.MainScope
@@ -32,44 +37,61 @@ internal class MyScriptPadView constructor(
 
     private val mainScope = MainScope()
 
-    private lateinit var myscript: MyScriptApi
+    private lateinit var myScript: MyScriptApi
+
+    private val candidateAdapter = CandidateAdapter(
+        onCandidateClicked = { candidate -> },
+        onExitClicked = {}
+    )
 
     init {
-        MyScriptInitializer(
-            certificate = MyCertificate.getBytes(),
-            editorView = binding.myScript.editorView,
-            context = context,
-            folders = FolderProvider(context),
-            assetResource = MyScriptAssetResource(context),
-            scope = mainScope
-        )
-            .setGeneralConfiguration()
-            .setMathConfiguration()
-            .initialize {
-                myscript = it.apply {
-                    listener = object : MyScriptInterpretListener {
-                        override fun onInterpreted(interpreted: String) {
-                            binding.latex.text = interpreted
-                            mainScope.launch {
-                                binding.redo.isEnabled = myscript.canRedo
-                                binding.undo.isEnabled = myscript.canUndo
-                            }
-                        }
+        initializeMyScript()
+        initializeRecyclerView()
+        initializeToolsListener()
+    }
 
-                        override fun onError(editor: Editor, blockId: String, error: EditorError, message: String) {
-                            Log.d("MY_SCRIPT_ERROR", "$error with message $message")
-                        }
-                    }
-                }
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        mainScope.cancel()
+    }
+
+    private fun initializeMyScript() {
+        mainScope.launch {
+            myScript = MyScriptInitializer(
+                myScriptView = binding.myScriptView,
+                context = context,
+                scope = mainScope
+            )
+                .initialize()
+                .apply { addListener(interpretListener) }
+                .apply { isAutoConvertEnabled = false }
+        }
+    }
+
+    private fun initializeRecyclerView() {
+        with(binding.candidate) {
+            adapter = candidateAdapter
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            background = MaterialShapeDrawable(
+                ShapeAppearanceModel.Builder()
+                    .setAllCornerSizes(8F.dp)
+                    .build()
+            ).apply {
+                tintList = ColorStateList.valueOf(Color.parseColor("#FFFFFF"))
+                strokeWidth = 1F.dp
+                strokeColor = ColorStateList.valueOf(Color.parseColor("#CFD8DC"))
+                elevation = 4F.dp
             }
+        }
+    }
 
+    private fun initializeToolsListener() {
         binding.redo.isEnabled = false
         binding.undo.isEnabled = false
 
-        binding.convert.setOnClickListener { myscript.convert() }
-        binding.deleteAll.setOnClickListener { myscript.eraseAll() }
+        binding.deleteAll.setOnClickListener { myScript.eraseAll() }
         binding.digitOnlyGrammar.setOnClickListener {
-            myscript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
+            myScript.loadMathGrammar("n_digit_exp", context.assets.toByteArray("n_digit_exp.res"))
         }
 
         binding.defaultGrammar.setOnClickListener {
@@ -77,20 +99,22 @@ internal class MyScriptPadView constructor(
         }
 
         binding.red.setOnClickListener {
-            myscript.penColor = 0xFF0000
+            myScript.penColor = 0xFF0000
         }
 
         binding.blue.setOnClickListener {
-            myscript.penColor = 0x0000FF
+            myScript.penColor = 0x0000FF
         }
 
         binding.black.setOnClickListener {
-            myscript.penColor = 0x000000
+            myScript.penColor = 0x000000
         }
+
+        binding.convert.setOnClickListener { myScript.convert() }
 
         binding.penSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.eraserSwitch.isChecked = false
-            myscript.tool = if (isChecked) {
+            myScript.tool = if (isChecked) {
                 MyScriptApi.Tool(
                     toolType = ToolType.PEN,
                     toolFunction = ToolFunction.DRAWING
@@ -104,32 +128,60 @@ internal class MyScriptPadView constructor(
         }
 
         binding.convertSwitch.setOnCheckedChangeListener { _, isChecked ->
-            myscript.isAutoConvertEnabled = isChecked
+            myScript.isAutoConvertEnabled = isChecked
         }
 
         binding.eraserSwitch.setOnCheckedChangeListener { _, isChecked ->
             val toolType = if (binding.penSwitch.isChecked) ToolType.PEN else ToolType.HAND
             if (isChecked) {
-                myscript.tool = MyScriptApi.Tool(toolType, ToolFunction.ERASING)
+                myScript.tool = MyScriptApi.Tool(toolType, ToolFunction.ERASING)
             } else {
-                myscript.tool = MyScriptApi.Tool(toolType, ToolFunction.DRAWING)
+                myScript.tool = MyScriptApi.Tool(toolType, ToolFunction.DRAWING)
             }
         }
 
         binding.redo.setOnClickListener {
-            myscript.redo()
+            myScript.redo()
         }
 
         binding.undo.setOnClickListener {
-            myscript.undo()
+            myScript.undo()
         }
+
+        binding.candidateSwitch.setOnCheckedChangeListener { _, isChecked -> }
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        mainScope.cancel()
+    private val interpretListener: MyScriptInterpretListener
+        get() = object : MyScriptInterpretListener {
+            override fun onInterpreted(interpreted: String) {
+                binding.latex.text = interpreted
+                binding.redo.isEnabled = myScript.canRedo
+                binding.undo.isEnabled = myScript.canUndo
+            }
+
+            override fun onInterpretError(editor: Editor, blockId: String, error: EditorError, message: String) {
+                Log.d("MY_SCRIPT_ERROR", "$error with message $message")
+            }
+
+            override fun onImportError() {
+                Toast
+                    .makeText(context, "해당 문자로는 변경이 불가능합니다.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+    private fun showNoCandidateAvailable() {
+        Toast
+            .makeText(context, "No candidates available.", Toast.LENGTH_SHORT)
+            .show()
     }
 
     private fun AssetManager.toByteArray(fileName: String) = open(fileName).use { it.readBytes() }
 
+    private val Number.dp: Float
+        get() = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            toFloat(),
+            Resources.getSystem().displayMetrics
+        )
 }

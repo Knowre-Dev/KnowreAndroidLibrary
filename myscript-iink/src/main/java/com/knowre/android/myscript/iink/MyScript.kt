@@ -177,7 +177,9 @@ internal class MyScript(
 
     override fun convert() {
         convertingJob?.cancel()
-        editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
+        runCatching {
+            editor.let { it.convert(null, it.getSupportedTargetConversionStates(null)[0]) }
+        }
     }
 
     override fun import(jiix: Jiix) {

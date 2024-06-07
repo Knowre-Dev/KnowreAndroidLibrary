@@ -20,12 +20,14 @@ class UninitializedStatePropertyAccessException internal constructor(
  *     val importantStateProp: StateProperty<Int> = Uninitialized
  * ) {
  *     val importantState: Int by importantStateProp
- *     //val importantStateVerbose: Int
- *     //    get() = if (stateProp is StateProperty.Data) {
- *     //        importantStateProp.value
- *     //    } else throw UninitializedStatePropertyAccessException(
- *     //        "StateProperty importantStateProp must be initialized before get."
- *     //    }
+ *
+ *     val importantStateVerbose: Int
+ *         get() = if (importantStateProp is StateProperty.Data) {
+ *             importantStateProp.value
+ *         } else throw UninitializedStatePropertyAccessException(
+ *             "StateProperty \"importantStateProp\" " +
+ *                 "must be initialized before get."
+ *         }
  * }
  *
  * fun doSomething() {

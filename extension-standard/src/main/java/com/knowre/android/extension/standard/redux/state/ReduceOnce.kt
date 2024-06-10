@@ -2,6 +2,9 @@ package com.knowre.android.extension.standard.redux.state
 
 typealias ReduceOnce<T> = ReducibleValue<ReduceOnceValue<T>>
 
+fun <T> ReduceOnce(next: T): ReduceOnce<T> =
+    ReducibleValue(ReduceOnceValue(next))
+
 @JvmInline
 value class ReduceOnceValue<out T>
 @PublishedApi internal constructor(internal val value: T) {

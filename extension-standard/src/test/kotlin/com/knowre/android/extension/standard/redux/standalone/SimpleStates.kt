@@ -3,6 +3,8 @@ package com.knowre.android.extension.standard.redux.standalone
 import com.knowre.android.extension.standard.redux.ReduceAction
 import com.knowre.android.extension.standard.redux.Reducible
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
+import com.knowre.android.extension.standard.redux.operation.reduceOnceOp
+import com.knowre.android.extension.standard.redux.operation.reduceOp
 import com.knowre.android.extension.standard.redux.spec.ReduceSpec
 import com.knowre.android.extension.standard.redux.state.ReduceOnce
 import com.knowre.android.extension.standard.redux.state.ReducibleValue
@@ -20,10 +22,10 @@ internal class SimpleStateReduceSpec(snapshot: SimpleState) :
     ReduceSpec<SimpleState>(snapshot) {
 
     private var ownerOp: ReduceOperation<String> = ReduceOperation.Keep
-    var owner by snapshot.owner.reduceOnceProperty(::ownerOp::set)
+    var owner by snapshot.owner.reduceOnceOp(::ownerOp::set)
 
     private var countOp: ReduceOperation<Int> = ReduceOperation.Keep
-    var count by snapshot.count.reduceProperty(::countOp::set)
+    var count by snapshot.count.reduceOp(::countOp::set)
 
     override fun SimpleState.apply(): SimpleState = this
         .updateOnce(ownerOp) { new ->

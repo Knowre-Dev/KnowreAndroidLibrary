@@ -1,8 +1,9 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.knowre.android.extension.standard.redux
 
 import com.knowre.android.extension.standard.redux.spec.ReduceSpec
 
-@Suppress("MemberVisibilityCanBePrivate")
 open class SpecBasedReducer<R : Reducible, Spec : ReduceSpec<R>>(
     protected val spec: (R) -> Spec
 ) : (R, ReduceAction<R, Spec>) -> R {

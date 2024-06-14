@@ -2,6 +2,8 @@ package com.knowre.android.extension.standard.redux.interoperable
 
 import com.knowre.android.extension.standard.redux.*
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
+import com.knowre.android.extension.standard.redux.operation.reduceOnceOp
+import com.knowre.android.extension.standard.redux.operation.reduceOp
 import com.knowre.android.extension.standard.redux.spec.ReduceSpec
 import com.knowre.android.extension.standard.redux.spec.ReduceSpecDsl
 import com.knowre.android.extension.standard.redux.state.ReduceOnce
@@ -118,7 +120,7 @@ internal class CombinedStateReduceSpec(snapshot: CombinedState) :
     var barStateSpec by StateSpecDelegate(::barStateSpecOp::set)
 
     private var bazOp: ReduceOperation<Int> = ReduceOperation.Keep
-    var baz by snapshot.baz.reduceProperty(::bazOp::set)
+    var baz by snapshot.baz.reduceOp(::bazOp::set)
 
     override fun CombinedState.apply(): CombinedState = this
         .update(viewStateSpecOp) { spec ->
@@ -140,7 +142,7 @@ internal class CombinedViewStateReduceSpec(snapshot: CombinedViewState) :
     ReduceSpec<CombinedViewState>(snapshot) {
 
     private var combinedOp: ReduceOperation<Boolean> = ReduceOperation.Keep
-    var combined by snapshot.combined.reduceProperty(::combinedOp::set)
+    var combined by snapshot.combined.reduceOp(::combinedOp::set)
 
     override fun CombinedViewState.apply(): CombinedViewState =
         update(combinedOp) { new ->
@@ -157,10 +159,10 @@ internal class FooStateReduceSpec(snapshot: FooState) :
     var viewStateSpec by ViewStateReduceSpec(::viewStateSpecOp::set)
 
     private var fooVal1Op: ReduceOperation<Int> = ReduceOperation.Keep
-    var fooVal1 by snapshot.fooVal1.reduceProperty(::fooVal1Op::set)
+    var fooVal1 by snapshot.fooVal1.reduceOp(::fooVal1Op::set)
 
     private var fooVal2Op: ReduceOperation<String> = ReduceOperation.Keep
-    var fooVal2 by snapshot.fooVal2.reduceProperty(::fooVal2Op::set)
+    var fooVal2 by snapshot.fooVal2.reduceOp(::fooVal2Op::set)
 
     override fun FooState.apply(): FooState = this
         .update(viewStateSpecOp) { spec ->
@@ -179,7 +181,7 @@ internal class FooViewStateReduceSpec(snapshot: FooViewState) :
     ReduceSpec<FooViewState>(snapshot) {
 
     private var fooViewStateValOp: ReduceOperation<Boolean> = ReduceOperation.Keep
-    var fooViewStateVal by snapshot.fooViewStateVal.reduceProperty(::fooViewStateValOp::set)
+    var fooViewStateVal by snapshot.fooViewStateVal.reduceOp(::fooViewStateValOp::set)
 
     override fun FooViewState.apply(): FooViewState =
         update(fooViewStateValOp) { new ->
@@ -196,7 +198,7 @@ internal class BarStateReduceSpec(snapshot: BarState) :
     var viewStateSpec by ViewStateReduceSpec(::viewStateSpecOp::set)
 
     private var barValOp: ReduceOperation<Boolean> = ReduceOperation.Keep
-    var barVal by snapshot.barVal.reduceOnceProperty(::barValOp::set)
+    var barVal by snapshot.barVal.reduceOnceOp(::barValOp::set)
 
     override fun BarState.apply(): BarState = this
         .update(viewStateSpecOp) { spec ->
@@ -212,7 +214,7 @@ internal class BarViewStateReduceSpec(snapshot: BarViewState) :
     ReduceSpec<BarViewState>(snapshot) {
 
     private var barViewStateValOp: ReduceOperation<Int> = ReduceOperation.Keep
-    var barViewStateVal by snapshot.barViewStateVal.reduceProperty(::barViewStateValOp::set)
+    var barViewStateVal by snapshot.barViewStateVal.reduceOp(::barViewStateValOp::set)
 
     override fun BarViewState.apply(): BarViewState =
         update(barViewStateValOp) { new ->

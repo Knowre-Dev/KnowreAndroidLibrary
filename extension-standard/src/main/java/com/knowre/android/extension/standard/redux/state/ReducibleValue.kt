@@ -1,7 +1,7 @@
 package com.knowre.android.extension.standard.redux.state
 
 sealed class ReducibleValue<out T> {
-    data class Actual<T>(internal val current: T) : ReducibleValue<T>() {
+    data class Actual<T>(val current: T) : ReducibleValue<T>() {
         override fun toString(): String = current.toString()
     }
 

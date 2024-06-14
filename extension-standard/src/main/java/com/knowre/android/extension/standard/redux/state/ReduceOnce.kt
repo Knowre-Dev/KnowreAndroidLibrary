@@ -7,7 +7,7 @@ fun <T> ReduceOnce(next: T): ReduceOnce<T> =
 
 @JvmInline
 value class ReduceOnceValue<out T>
-@PublishedApi internal constructor(internal val value: T) {
+@PublishedApi internal constructor(val value: T) {
     override fun toString(): String = value.toString()
 }
 

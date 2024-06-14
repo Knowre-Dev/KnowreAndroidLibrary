@@ -49,8 +49,8 @@ internal class SpecBasedReducerTest {
         assertThat(state.owner.current, `is`(newOwner))
 
         newOwner = "thief"
-        val result = reducer.runCatching {
-            invoke(state, SetOwner(newOwner))
+        val result = runCatching {
+            reducer(state, SetOwner(newOwner))
         }
         assertThat(result.isFailure, `is`(true))
     }

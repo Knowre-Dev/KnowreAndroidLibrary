@@ -53,10 +53,13 @@ internal class ReduceSpecTest {
             .invoke()
         assertThat(state.owner.current, `is`("owner"))
 
-        val result: Result<SimpleState> = SimpleStateReduceSpec(state)
-            .runCatching {
-                apply { owner = "thief" }.invoke()
-            }
+        val result: Result<SimpleState> = runCatching {
+            SimpleStateReduceSpec(state)
+                .apply {
+                    owner = "thief"
+                }
+                .invoke()
+        }
         assertThat(result.isFailure, `is`(true))
     }
 }

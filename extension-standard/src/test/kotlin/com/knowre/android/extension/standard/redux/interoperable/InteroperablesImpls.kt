@@ -2,6 +2,8 @@ package com.knowre.android.extension.standard.redux.interoperable
 
 import com.knowre.android.extension.standard.redux.*
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
+import com.knowre.android.extension.standard.redux.operation.reduceOnceOp
+import com.knowre.android.extension.standard.redux.operation.reduceOp
 import com.knowre.android.extension.standard.redux.spec.ReduceSpec
 import com.knowre.android.extension.standard.redux.spec.ReduceSpecDsl
 import com.knowre.android.extension.standard.redux.state.ReduceOnce
@@ -101,7 +103,7 @@ internal class InteroperableStateReduceSpec(snapshot: InteroperableState) :
     var viewStateSpec by ViewStateReduceSpec(::viewStateSpecOp::set)
 
     private var referenceCountOp: ReduceOperation<Int> = ReduceOperation.Keep
-    var referenceCount by snapshot.referenceCount.reduceProperty(::referenceCountOp::set)
+    var referenceCount by snapshot.referenceCount.reduceOp(::referenceCountOp::set)
 
     override fun InteroperableState.apply(): InteroperableState = this
         .update(viewStateSpecOp) { spec ->
@@ -117,10 +119,10 @@ internal class InteroperableViewStateReduceSpec(snapshot: InteroperableViewState
     ReduceSpec<InteroperableViewState>(snapshot) {
 
     private var countOp: ReduceOperation<Int> = ReduceOperation.Keep
-    var count by snapshot.count.reduceProperty(::countOp::set)
+    var count by snapshot.count.reduceOp(::countOp::set)
 
     private var ownerOp: ReduceOperation<String> = ReduceOperation.Keep
-    var owner by snapshot.owner.reduceOnceProperty(::ownerOp::set)
+    var owner by snapshot.owner.reduceOnceOp(::ownerOp::set)
 
     override fun InteroperableViewState.apply(): InteroperableViewState = this
         .update(countOp) { new ->

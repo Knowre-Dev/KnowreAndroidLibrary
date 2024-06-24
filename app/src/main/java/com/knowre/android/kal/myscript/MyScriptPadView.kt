@@ -58,6 +58,7 @@ internal class MyScriptPadView constructor(
     private fun initializeMyScript() {
         mainScope.launch {
             myScript = MyScriptInitializer(
+                certificate = byteArrayOf(),
                 myScriptView = binding.myScriptView,
                 context = context,
                 scope = mainScope

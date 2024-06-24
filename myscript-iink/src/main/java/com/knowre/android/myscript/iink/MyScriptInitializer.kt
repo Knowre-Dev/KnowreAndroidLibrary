@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
-import com.knowre.android.myscript.iink.certificate.MyCertificate
 import com.knowre.android.myscript.iink.view.MyScriptView
 import com.myscript.iink.Configuration
 import com.myscript.iink.Editor
@@ -27,13 +26,14 @@ private const val INTERPRET_SESSION_TIME_MILLIS: Long = 100
 private const val CANDIDATE_COUNT: Int = 2
 
 class MyScriptInitializer(
+    private val certificate: ByteArray,
     private val myScriptView: MyScriptView,
     private val context: Context,
     private val scope: CoroutineScope
 ) {
 
     private val engine by lazy {
-        Engine.create(MyCertificate.getBytes()).apply {
+        Engine.create(certificate).apply {
             deleteUsedPackage(folders.packageFolder)
         }
     }

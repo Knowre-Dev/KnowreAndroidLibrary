@@ -1,4 +1,4 @@
-package com.knowre.android.extension.standard.redux.interoperable
+package com.knowre.android.extension.standard.redux.interoperable.summit
 
 import com.knowre.android.extension.standard.redux.Reducible
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
@@ -7,28 +7,29 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 // ---------- interoperable interfaces (e.g. Summit-Android KnowRedux) ----------
-internal interface StateType
-internal interface ViewStateType
-internal interface ViewStateAware<VS : ViewStateType> : StateType {
+internal interface SummitStateType
+internal interface SummitViewStateType
+internal interface SummitViewStateAware<VS : SummitViewStateType> : SummitStateType {
     val viewState: VS
 }
 
-internal interface Action
-internal interface ViewAction
-internal interface ViewRenderAction : ViewAction
-internal interface ViewCallbackAction : ViewAction
-internal interface StateAction<R : ViewRenderAction, C : ViewCallbackAction> : Action {
+internal interface SummitAction
+internal interface SummitViewAction
+internal interface SummitViewRenderAction : SummitViewAction
+internal interface SummitViewCallbackAction : SummitViewAction
+internal interface SummitStateAction<R : SummitViewRenderAction, C : SummitViewCallbackAction> :
+    SummitAction {
     val renderAction: R? get() = null
     val callbackAction: C? get() = null
 }
 
-internal interface Reducer<S : StateType, in A : Action> {
+internal interface SummitReducer<S : SummitStateType, in A : SummitAction> {
     fun reduce(state: S, action: A): S
 }
 
 // ---------- interop-bridge interfaces (e.g. Summit-Android KnowRedux) ----------
-internal abstract class StateReduceSpec<R, VS : ViewStateType>(snapshot: R) :
-    ReduceSpec<R>(snapshot) where R : ViewStateAware<VS>, R : Reducible {
+internal abstract class StateReduceSpec<R, VS : SummitViewStateType>(snapshot: R) :
+    ReduceSpec<R>(snapshot) where R : SummitViewStateAware<VS>, R : Reducible {
 
     val viewState: VS by snapshot::viewState
 

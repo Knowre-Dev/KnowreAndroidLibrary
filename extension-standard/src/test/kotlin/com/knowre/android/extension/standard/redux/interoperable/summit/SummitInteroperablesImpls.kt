@@ -1,4 +1,4 @@
-package com.knowre.android.extension.standard.redux.interoperable
+package com.knowre.android.extension.standard.redux.interoperable.summit
 
 import com.knowre.android.extension.standard.redux.*
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
@@ -13,19 +13,19 @@ import com.knowre.android.extension.standard.redux.state.ReducibleValue
 internal data class InteroperableViewState(
     val count: ReducibleValue<Int> = ReducibleValue.Uninitialized,
     val owner: ReduceOnce<String> = ReducibleValue.Uninitialized
-) : ViewStateType, Reducible
+) : SummitViewStateType, Reducible
 
 internal data class InteroperableState(
     override val viewState: InteroperableViewState = InteroperableViewState(),
     val referenceCount: ReducibleValue<Int> = ReducibleValue(0)
-) : ViewStateAware<InteroperableViewState>, Reducible
+) : SummitViewStateAware<InteroperableViewState>, Reducible
 
 // ---------- interoperable ReduceAction ----------
 internal interface InteroperableReduceAction :
     ReduceAction<InteroperableState, InteroperableStateReduceSpec>
 
 internal sealed class InteroperableAction :
-    StateAction<InteroperableRenderAction, InteroperableCallbackAction> {
+    SummitStateAction<InteroperableRenderAction, InteroperableCallbackAction> {
 
     object Reset : InteroperableAction(), InteroperableReduceAction {
         override val operation: InteroperableStateReduceSpec.() -> Unit
@@ -46,7 +46,7 @@ internal sealed class InteroperableAction :
     }
 }
 
-internal sealed class InteroperableCallbackAction : ViewCallbackAction {
+internal sealed class InteroperableCallbackAction : SummitViewCallbackAction {
     data class SetCount(private val newCount: Int) :
         InteroperableCallbackAction(), InteroperableReduceAction {
         override val operation: InteroperableStateReduceSpec.() -> Unit
@@ -70,10 +70,10 @@ internal sealed class InteroperableCallbackAction : ViewCallbackAction {
     }
 }
 
-internal object InteroperableRenderAction : ViewRenderAction
+internal object InteroperableRenderAction : SummitViewRenderAction
 
 // ---------- interoperable ReduceSpec ----------
-internal class InteroperableReducer : Reducer<InteroperableState, InteroperableAction>,
+internal class InteroperableReducer : SummitReducer<InteroperableState, InteroperableAction>,
     SpecBasedReducer<InteroperableState, InteroperableStateReduceSpec>(
         ::InteroperableStateReduceSpec
     ) {

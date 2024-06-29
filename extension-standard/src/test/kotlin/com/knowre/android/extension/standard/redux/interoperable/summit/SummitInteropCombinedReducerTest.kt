@@ -1,4 +1,4 @@
-package com.knowre.android.extension.standard.redux.interoperable
+package com.knowre.android.extension.standard.redux.interoperable.summit
 
 import com.knowre.android.extension.standard.redux.state.current
 import org.hamcrest.CoreMatchers.`is`
@@ -6,9 +6,9 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
 
-internal class InteropCombinedReducerTest {
+internal class SummitInteropCombinedReducerTest {
 
-    private lateinit var reducer: Reducer<CombinedState, CombinedAction>
+    private lateinit var reducer: SummitReducer<CombinedState, CombinedAction>
     private lateinit var state: CombinedState
 
     @Before

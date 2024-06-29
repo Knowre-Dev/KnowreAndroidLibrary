@@ -1,4 +1,4 @@
-package com.knowre.android.extension.standard.redux.interoperable
+package com.knowre.android.extension.standard.redux.interoperable.summit
 
 import com.knowre.android.extension.standard.redux.*
 import com.knowre.android.extension.standard.redux.operation.ReduceOperation
@@ -15,37 +15,37 @@ internal data class CombinedState(
     val fooState: FooState = FooState(),
     val barState: BarState = BarState(),
     val baz: ReducibleValue<Int> = ReducibleValue.Uninitialized
-) : ViewStateAware<CombinedViewState>, Reducible
+) : SummitViewStateAware<CombinedViewState>, Reducible
 
 internal data class CombinedViewState(
     val combined: ReducibleValue<Boolean> = ReducibleValue.Uninitialized
-) : ViewStateType, Reducible
+) : SummitViewStateType, Reducible
 
 internal data class FooState(
     override val viewState: FooViewState = FooViewState(),
     val fooVal1: ReducibleValue<Int> = ReducibleValue.Uninitialized,
     val fooVal2: ReducibleValue<String> = ReducibleValue.Uninitialized
-) : ViewStateAware<FooViewState>, Reducible
+) : SummitViewStateAware<FooViewState>, Reducible
 
 internal data class FooViewState(
     val fooViewStateVal: ReducibleValue<Boolean> = ReducibleValue(true)
-) : ViewStateType, Reducible
+) : SummitViewStateType, Reducible
 
 internal data class BarState(
     override val viewState: BarViewState = BarViewState(),
     val barVal: ReduceOnce<Boolean> = ReducibleValue.Uninitialized
-) : ViewStateAware<BarViewState>, Reducible
+) : SummitViewStateAware<BarViewState>, Reducible
 
 internal data class BarViewState(
     val barViewStateVal: ReducibleValue<Int> = ReducibleValue(0)
-) : ViewStateType, Reducible
+) : SummitViewStateType, Reducible
 
 // ---------- Combined ReduceAction ----------
 internal interface CombinedReduceAction :
     ReduceAction<CombinedState, CombinedStateReduceSpec>
 
 internal sealed class CombinedAction :
-    StateAction<CombinedRenderAction, CombinedCallbackAction> {
+    SummitStateAction<CombinedRenderAction, CombinedCallbackAction> {
 
     class Callback(
         override val callbackAction: CombinedCallbackAction = CombinedCallbackAction
@@ -87,12 +87,12 @@ internal data class UpdateCombinedState(
         }
 }
 
-internal object CombinedRenderAction : ViewRenderAction
+internal object CombinedRenderAction : SummitViewRenderAction
 
-internal object CombinedCallbackAction : ViewCallbackAction
+internal object CombinedCallbackAction : SummitViewCallbackAction
 
 // ---------- Combined ReduceSpec ----------
-internal class CombinedReducer : Reducer<CombinedState, CombinedAction>,
+internal class CombinedReducer : SummitReducer<CombinedState, CombinedAction>,
     SpecBasedReducer<CombinedState, CombinedStateReduceSpec>(::CombinedStateReduceSpec) {
 
     override fun reduce(state: CombinedState, action: CombinedAction): CombinedState =

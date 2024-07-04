@@ -69,7 +69,6 @@ class MyScriptInitializer(
             MyScript(
                 engine = engine,
                 packageFolder = folders.packageFolder,
-                rootFolder = folders.rootFolder,
                 editor = editor,
                 inputController = inputController,
                 mathGrammarLoader = mathGrammarLoader,

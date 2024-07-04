@@ -21,7 +21,6 @@ import kotlin.properties.Delegates
 
 internal class MyScript(
     packageFolder: File,
-    private val rootFolder: File,
     private val engine: Engine,
     private val inputController: InputController,
     private val editor: Editor,
@@ -222,9 +221,7 @@ internal class MyScript(
         editor.renderer.close()
         editor.close()
         engine.close()
-        rootFolder.deleteRecursively()
         convertingJob?.cancel()
-
     }
 
     private fun onInterpreted(latex: String) {

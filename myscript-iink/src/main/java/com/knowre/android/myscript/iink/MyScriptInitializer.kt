@@ -33,9 +33,7 @@ class MyScriptInitializer(
 ) {
 
     private val engine by lazy {
-        Engine.create(certificate).apply {
-            deleteUsedPackage(folders.packageFolder)
-        }
+        Engine.create(certificate)
     }
 
     private val editorData by lazy {
@@ -129,15 +127,4 @@ private fun Context.provideTypefaces(): Map<String, Typeface> {
         typefaces["SYMBOLA"] = it
     }
     return typefaces
-}
-
-private fun Engine.deleteUsedPackage(packageFolder: File) {
-    runCatching {
-        with(packageFolder) {
-            openPackage(this)
-                .takeIf { !it.isClosed }
-                ?.close()
-            deletePackage(this)
-        }
-    }
 }

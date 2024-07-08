@@ -15,8 +15,7 @@ internal class FolderProvider(val context: Context) {
     val mathResourceFolder
         get() = File(rootFolder, MATH_RESOURCE)
 
-    val packageFolder
-        get() = File(rootFolder, PACKAGE)
+    val packageFolder = File(rootFolder, "${PACKAGE}_${System.currentTimeMillis()}")
 
     val contentPackageTempFolder
         get() =File(rootFolder, CONTENT_PACKAGE)

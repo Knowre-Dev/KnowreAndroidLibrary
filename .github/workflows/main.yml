@@ -53,7 +53,7 @@ jobs:
           COLOR="warning"
         fi
 
-        BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run-id }}"
+        BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         
         curl -X POST -H 'Content-type: application/json' --data \
         '{

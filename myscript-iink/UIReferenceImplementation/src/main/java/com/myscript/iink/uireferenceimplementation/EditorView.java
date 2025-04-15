@@ -174,7 +174,7 @@ public class EditorView extends FrameLayout implements IRenderTarget, InputContr
     viewWidth = newWidth;
     viewHeight = newHeight;
 
-    if (editor != null)
+    if (editor != null && !editor.isClosed())
     {
       editor.setViewSize(newWidth, newHeight);
       invalidate(renderer, EnumSet.allOf(IRenderTarget.LayerType.class));

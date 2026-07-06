@@ -124,6 +124,11 @@ public class LayerView extends View
         renderer = lastRenderer;
       }
 
+      // 에디터(비동기) 바인딩 전에 draw 되면 renderer 가 null 이므로 이번 프레임은 건너뛴다.
+      // (바인딩 완료 후 update() 가 lastRenderer 설정 + invalidate 하여 정상 재드로우됨)
+      if (renderer == null)
+        return;
+
       iinkCanvas.setCanvas(canvas);
       prepare(canvas, localUpdateArea);
 
@@ -149,7 +154,7 @@ public class LayerView extends View
         lastRenderer = null;
       }
 
-      if (!localUpdateArea.isEmpty())
+      if (!localUpdateArea.isEmpty() && renderer != null)
       {
         prepare(sysCanvas, localUpdateArea);
         try

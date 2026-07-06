@@ -5,13 +5,13 @@ plugins {
 android {
     namespace 'com.myscript.iink.uireferenceimplementation'
 
-    compileSdk 33
+    compileSdk 36
 
     defaultConfig {
         minSdk 21
-        targetSdk 33
-        versionCode 2110
-        versionName '2.1.1'
+        targetSdk 36
+        versionCode 4500
+        versionName '4.5.0'
 
         vectorDrawables.useSupportLibrary true
     }
@@ -20,5 +20,5 @@ android {
 dependencies {
     implementation "androidx.appcompat:appcompat:1.5.1"
     implementation "com.google.code.gson:gson:2.10.1"
-    api "com.myscript:iink:3.0.2"
+    api "com.myscript:iink:4.5.0"
 }

@@ -6,14 +6,14 @@ import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.util.DisplayMetrics;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.myscript.iink.Editor;
 import com.myscript.iink.Engine;
 import com.myscript.iink.Renderer;
 
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public final class EditorBinding
 {
@@ -28,25 +28,6 @@ public final class EditorBinding
   {
     this.engine = engine;
     this.typefaces = typefaces;
-  }
-
-  @NonNull
-  public final EditorData openEditor(@Nullable EditorView editorView)
-  {
-    Editor editor = null;
-    Renderer renderer = null;
-    if (engine != null && editorView != null)
-    {
-      Resources resources = editorView.getResources();
-      DisplayMetrics displayMetrics = resources.getDisplayMetrics();
-      renderer = engine.createRenderer(displayMetrics.xdpi, displayMetrics.ydpi, editorView);
-      renderer.setViewOffset(0.0f, 0.0f);
-      renderer.setViewScale(1.0f);
-      editor = engine.createEditor(renderer, engine.createToolController());
-      editor.setFontMetricsProvider(new FontMetricsProvider(displayMetrics, typefaces));
-      bindEditor(editorView, editor);
-    }
-    return new EditorData(editor, renderer, inputController);
   }
 
   private void bindEditor(@NonNull EditorView editorView, @Nullable Editor editor)
@@ -66,4 +47,22 @@ public final class EditorBinding
     editorView.setOnTouchListener(inputController);
   }
 
+  @NonNull
+  public EditorData openEditor(@Nullable EditorView editorView)
+  {
+    Editor editor = null;
+    Renderer renderer = null;
+    if (engine != null && editorView != null)
+    {
+      Resources resources = editorView.getResources();
+      DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+      renderer = engine.createRenderer(displayMetrics.xdpi, displayMetrics.ydpi, editorView);
+      renderer.setViewOffset(0.0f, 0.0f);
+      renderer.setViewScale(1.0f);
+      editor = engine.createEditor(renderer, engine.createToolController());
+      editor.setFontMetricsProvider(new FontMetricsProvider(displayMetrics, typefaces));
+      bindEditor(editorView, editor);
+    }
+    return new EditorData(editor, renderer, inputController);
+  }
 }

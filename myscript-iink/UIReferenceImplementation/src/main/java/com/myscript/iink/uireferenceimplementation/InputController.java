@@ -34,6 +34,10 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
     void showScrollbars();
   }
 
+  public interface OnTouchListener {
+    void onTouch(View v, MotionEvent e);
+  }
+
   public static final int INPUT_MODE_NONE = -1;
   public static final int INPUT_MODE_FORCE_PEN = 0;
   public static final int INPUT_MODE_FORCE_TOUCH = 1;
@@ -53,6 +57,7 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
   @VisibleForTesting
   public PointerType iinkPointerType;
   private ViewListener _viewListener;
+  private OnTouchListener touchListener;
 
   private boolean isScalingEnabled = false;
   private float getPreviousScalingSpan;
@@ -114,6 +119,10 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
   public final synchronized int getPreviousPointerId()
   {
     return previousPointerId;
+  }
+
+  public final OnTouchListener setOnTouchListener(OnTouchListener listener) {
+    return this.touchListener = listener;
   }
 
   private boolean handleOnTouchForPointer(MotionEvent event, int actionMask, int pointerIndex)
@@ -292,6 +301,15 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
 
   @Override
   public boolean onTouch(View v, MotionEvent event)
+  {
+    boolean result = processOnTouch(v, event);
+    if (this.touchListener != null) {
+      this.touchListener.onTouch(v, event);
+    }
+    return result;
+  }
+
+  private boolean processOnTouch(View v, MotionEvent event)
   {
     if (editor == null)
     {

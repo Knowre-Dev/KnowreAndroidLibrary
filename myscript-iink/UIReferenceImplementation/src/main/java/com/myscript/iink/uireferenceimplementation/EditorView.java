@@ -201,7 +201,7 @@ public class EditorView extends FrameLayout implements IRenderTarget, InputContr
     viewWidth = newWidth;
     viewHeight = newHeight;
 
-    if (editor != null)
+    if (editor != null && !editor.isClosed())
     {
       editor.setViewSize(newWidth, newHeight);
       invalidate(renderer, EnumSet.allOf(IRenderTarget.LayerType.class));
@@ -290,7 +290,15 @@ public class EditorView extends FrameLayout implements IRenderTarget, InputContr
     if (offlineBitmap == null)
       return null;
     android.graphics.Canvas canvas = new android.graphics.Canvas(offlineBitmap);
-    return new Canvas(canvas, extraBrushConfigs, typefaceMap, imageLoader, offlineSurfaceManager, renderer.getDpiX(), renderer.getDpiY());
+    try {
+      return new Canvas(canvas, extraBrushConfigs, typefaceMap, imageLoader, offlineSurfaceManager, renderer.getDpiX(), renderer.getDpiY());
+    } catch(Exception e) {
+      /*
+       * 지금 이 함수는 별도 쓰레드에서 실행되는데, 다른 쓰레드에서 renderer 가 close 될 경우 익셉션이 발생되는데
+       * close 된 renderer 가 사용될 경우가 없을 것이라 판단, null 을 리턴.
+       */
+      return null;
+    }
   }
 
   @Override

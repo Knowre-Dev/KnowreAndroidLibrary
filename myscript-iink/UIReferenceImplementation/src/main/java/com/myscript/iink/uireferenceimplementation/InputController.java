@@ -3,6 +3,7 @@
 package com.myscript.iink.uireferenceimplementation;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -188,7 +189,14 @@ public class InputController implements View.OnTouchListener, GestureDetector.On
         ToolController toolController = editor.getToolController();
         PointerTool tool = toolController.getToolForType(iinkPointerType);
         if (tool == PointerTool.PEN || tool == PointerTool.HIGHLIGHTER)
-          editorView.requestUnbufferedDispatch(event);
+        {
+          // API 27/28/29 의 ViewRootImpl 은 "즉시 배치 소비"(scheduleConsumeBatchedInputImmediately)가
+          // 예약된 프레임 소비를 취소만 하고 실제로는 아무것도 소비하지 않는다. 그 결과 배치된 입력이
+          // 영영 회수되지 않아 입력 디스패치 타임아웃 ANR 이 발생한다. API 30 에서 수정됨.
+          // → trouble-shootings/myscript-iink-4.5-anr-rollback.md
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            editorView.requestUnbufferedDispatch(event);
+        }
 
         try
         {

@@ -7,7 +7,8 @@ data class Jiix(
     val id: String,
     val type: String,
     val items: List<Item>?,
-    val expressions: List<Expression>?,
+    /** 원소가 null 일 수 있는 이유는 [Expression.operands] 주석 참고. */
+    val expressions: List<Expression?>?,
     @SerializedName("bounding-box")
     val boundingBox: BoundingBox?,
     val version: String
@@ -15,7 +16,7 @@ data class Jiix(
 
 fun Jiix.isValid() =
     !expressions.isNullOrEmpty() &&
-        expressions.all { it.id != null } &&
+        expressions.all { it?.id != null } &&
         getAllItems().all { it.isValid }
 
 fun Jiix.changeItem(itemId: String, func: Item.() -> Item) =
@@ -27,6 +28,6 @@ internal fun Jiix.changeItem(newItem: Item) =
             if (item.id == newItem.id) newItem else item
         },
         expressions = expressions?.map { expression ->
-            expression.changeItem(newItem)
+            expression?.changeItem(newItem)
         }
     )

@@ -8,9 +8,9 @@ import java.util.Collections
 //region Jiix
 internal fun Jiix.getAllExpressions(): List<Expression> {
     fun List<Expression>.flatten(): List<Expression> =
-        this + this.flatMap { it.operands?.flatten() ?: Collections.emptyList() }
+        this + this.flatMap { it.operands?.filterNotNull()?.flatten() ?: Collections.emptyList() }
 
-    return this.expressions?.flatten() ?: Collections.emptyList()
+    return this.expressions?.filterNotNull()?.flatten() ?: Collections.emptyList()
 }
 
 fun Jiix.getCandidates(item: Item): List<String> {
